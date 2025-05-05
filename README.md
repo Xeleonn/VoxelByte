@@ -1,3 +1,3 @@
 # VoxelByte
  
-3D voxel engine made in OpenGL using C++
+A 3D voxel engine made in OpenGL using C++
