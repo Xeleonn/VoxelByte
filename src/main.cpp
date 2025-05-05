@@ -1,9 +1,8 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-#include "shaders_s.h"
-
+//#define GLFW_DLL
+#include "../include/glad/glad.h"
+#include "../include/GLFW/glfw3.h"
 #include <iostream>
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -47,7 +46,7 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    Shader ourShader("src/shaders/shader.vs", "src/shaders/shader.fs"); // you can name your shader files however you like
+    //Shader ourShader("src/shaders/shader.vs", "src/shaders/shader.fs"); // you can name your shader files however you like
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -93,7 +92,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render the triangle
-        ourShader.use();
+        //ourShader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
