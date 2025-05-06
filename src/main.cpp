@@ -225,7 +225,9 @@ int main()
 
     // ImGui window elements
     ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-    ImGui::Text("Voxel Byte window test");
+    ImGui::Text("Time: %.2f", game_clock.GetTime());
+    ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+    ImGui::Text("Fps: %.2f", game_clock.GetFPS());
     ImGui::End();
 
     // ImGui render
