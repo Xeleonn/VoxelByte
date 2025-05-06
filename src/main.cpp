@@ -4,7 +4,6 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,10 +21,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // Settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
 
-// camera
+// Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -54,8 +53,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
-    // Tell GLFW to capture our mouse
+    
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // GLAD: Load all OpenGL function pointers
@@ -182,64 +180,61 @@ int main()
 
     // Render loop
     while (!glfwWindowShouldClose(window))
-    {   
-        // Update clock
-        game_clock.Update();
+    {
+    // Update clock
+    game_clock.Update();
 
-        // Input
-        processInput(window);
+    // Input
+    processInput(window);
 
-        // Render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Render
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
-        // Activate shader
-        ourShader.use();
+    // Activate shader
+    ourShader.use();
 
-        // Pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    // Pass projection matrix to shader (note that in this case it could change every frame)
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
-        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    // Camera/view transformation
+    glm::mat4 view = camera.GetViewMatrix();
+    unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        // Render boxes
-        glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < 10; i++)
-        {
-            // Calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // Render boxes
+    glBindVertexArray(VAO);
+    for (unsigned int i = 0; i < 10; i++)
+    {
+        // Calculate the model matrix for each object and pass it to shader before drawing
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::translate(model, cubePositions[i]);
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
-        // ImGui window elements
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-            ImGui::Text("Voxel Byte window test");
-            ImGui::Text("Time: %lf", game_clock.GetTime());
-            ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-            ImGui::Text("Fps: %f", game_clock.GetFPS());
-        ImGui::End();
+    // ImGui window elements
+    ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
+    ImGui::Text("Voxel Byte window test");
+    ImGui::End();
 
-        // ImGui render
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // ImGui render
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // GLFW: swap buffers and poll IO events. (keys pressed/released, mouse moved etc.)
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+    // GLFW: swap buffers and poll IO events. (keys pressed/released, mouse moved etc.)
+    glfwSwapBuffers(window);
+    glfwPollEvents();
     }
 
     // Terminate ImGui resources.
@@ -259,6 +254,12 @@ int main()
 // Process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -282,6 +283,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // GLFW: Whenever the mouse moves, this callback is called
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -293,7 +295,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
 
     lastX = xpos;
     lastY = ypos;
