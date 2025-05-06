@@ -224,6 +224,8 @@ int main()
     }
 
     // ImGui window elements
+    ImGui::SetNextWindowSize(ImVec2(200, 300));
+    ImGui::SetNextWindowPos(ImVec2(25, 25));
     ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
     ImGui::Text("Time: %.2f", game_clock.GetTime());
     ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
@@ -273,6 +275,10 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, game_clock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, game_clock.GetDeltaTime());
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, game_clock.GetDeltaTime());
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, game_clock.GetDeltaTime());
 }
 
 // GLFW: Whenever the window size changed (by OS or user resize) this callback function executes
