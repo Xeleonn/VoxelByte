@@ -6,6 +6,7 @@ Clock::Clock()
     last_tick = current_tick;
     init_tick = current_tick;
     delta_time = 0;
+    time = 0;
 }
 
 void Clock::Update()
