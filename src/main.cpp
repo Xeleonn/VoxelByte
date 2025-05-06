@@ -11,6 +11,7 @@
 
 #include "shader.h"
 #include "clock.h"
+#include "voxel.h"
 #include "camera.h"
 
 #include <iostream>
@@ -32,6 +33,8 @@ bool firstMouse = true;
 
 // Initialize clock
 Clock game_clock;
+
+Voxel voxel;
 
 int main()
 {
@@ -90,70 +93,62 @@ int main()
     "}\n\0"
     };
 
+    float vertices[] = {
+        // positions          // colors
+                                                // Front face (Red)
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-right
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-left
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
+    
+                                                // Back face (Green)
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-right
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-left
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
+    
+                                                // Left face (Blue)
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
+        -0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // top-back
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // bottom-front
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
+    
+                                                // Right face (Yellow)
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // top-back
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // bottom-front
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
+    
+                                                // Bottom face (Cyan)
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // back-right
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // front-right
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // front-right
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-left
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
+    
+                                                // Top face (Magenta)
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-left
+         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-right
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-right
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-right
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-left
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f  // back-left
+    };
+
     // Configure global opengl state
     glEnable(GL_DEPTH_TEST);
 
     // Build and compile our shader program
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
-
-    float vertices[] = {
-        // positions         // colors
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front bottom-left (red)
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front bottom-right (red)
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front top-right (red)
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front top-right (red)
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front top-left (red)
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // front bottom-left (red)
-    
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back bottom-left (green)
-         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back bottom-right (green)
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back top-right (green)
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back top-right (green)
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back top-left (green)
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // back bottom-left (green)
-    
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // left top-front (blue)
-        -0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // left top-back (blue)
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // left bottom-back (blue)
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // left bottom-back (blue)
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // left bottom-front (blue)
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // left top-front (blue)
-    
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // right top-front (yellow)
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // right top-back (yellow)
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // right bottom-back (yellow)
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // right bottom-back (yellow)
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // right bottom-front (yellow)
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // right top-front (yellow)
-    
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // bottom back-left (cyan)
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // bottom back-right (cyan)
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // bottom front-right (cyan)
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // bottom front-right (cyan)
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // bottom front-left (cyan)
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // bottom back-left (cyan)
-    
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // top back-left (magenta)
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // top back-right (magenta)
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // top front-right (magenta)
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // top front-right (magenta)
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // top front-left (magenta)
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f  // top back-left (magenta)
-    };
-    
-    // World space positions of our cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -210,18 +205,7 @@ int main()
 
     // Render boxes
     glBindVertexArray(VAO);
-    for (unsigned int i = 0; i < 10; i++)
-    {
-        // Calculate the model matrix for each object and pass it to shader before drawing
-        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        model = glm::translate(model, cubePositions[i]);
-        float angle = 20.0f * i;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
+    voxel.DrawVoxel(10, ourShader);
 
     // ImGui window elements
     ImGui::SetNextWindowSize(ImVec2(200, 300));
@@ -230,6 +214,7 @@ int main()
     ImGui::Text("Time: %.2f", game_clock.GetTime());
     ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
     ImGui::Text("Fps: %.2f", game_clock.GetFPS());
+    ImGui::Text("Voxels generated: %d", voxel.GetVoxelsGenerated());
     ImGui::End();
 
     // ImGui render
