@@ -276,9 +276,9 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, game_clock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, game_clock.GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, game_clock.GetDeltaTime());
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, game_clock.GetDeltaTime());
 }
 
 // GLFW: Whenever the window size changed (by OS or user resize) this callback function executes
