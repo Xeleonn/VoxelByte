@@ -12,5 +12,5 @@ class Clock
     private:
         std::chrono::_V2::system_clock::time_point current_tick;
         std::chrono::_V2::system_clock::time_point last_tick;
-        double seconds_since_start;
+        std::chrono::_V2::system_clock::time_point init_tick;
 };

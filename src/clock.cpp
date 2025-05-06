@@ -4,19 +4,19 @@ Clock::Clock()
 {
     current_tick = std::chrono::high_resolution_clock::now();
     last_tick = current_tick;
-    seconds_since_start = 0;
+    init_tick = current_tick;
 }
 
 void Clock::Update()
 {
     last_tick = current_tick;
     current_tick = std::chrono::high_resolution_clock::now();
-    seconds_since_start += GetDeltaTime();
 }
 
 double Clock::GetTime()
 {
-    return seconds_since_start;
+    std::chrono::duration<double> time = current_tick - init_tick;
+    return time.count();
 }
 
 double Clock::GetDeltaTime()
