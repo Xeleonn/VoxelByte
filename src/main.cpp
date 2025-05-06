@@ -7,6 +7,7 @@
 #include <stb/stb_image.h>
 
 #include "shader.h"
+#include "clock.h"
 
 #include <iostream>
 
@@ -120,9 +121,15 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    // Initialize clock
+    Clock game_clock;
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
+        // Update Clock
+        game_clock.Update();
+
         // Input
         processInput(window);
 
@@ -142,6 +149,9 @@ int main()
         // ImGui window elements
         ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
         ImGui::Text("Voxel Byte window test");
+        ImGui::Text("Time: %lf", game_clock.GetTime());
+        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+        ImGui::Text("Fps: %lf", game_clock.GetFPS());
         ImGui::End();
 
         // ImGui render
