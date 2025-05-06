@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
+#include "clock.h"
 #include "camera.h"
 
 #include <iostream>
@@ -29,9 +30,8 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-// Timing
-float deltaTime = 0.0f;	// Time between current frame and last frame
-float lastFrame = 0.0f;
+// Initialize clock
+Clock game_clock;
 
 int main()
 {
@@ -181,10 +181,8 @@ int main()
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
-    // Per=frame time logic
-    float currentFrame = static_cast<float>(glfwGetTime());
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
+    // Update clock
+    game_clock.Update();
 
     // Input
     processInput(window);
@@ -266,13 +264,13 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, game_clock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        camera.ProcessKeyboard(BACKWARD, game_clock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        camera.ProcessKeyboard(LEFT, game_clock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        camera.ProcessKeyboard(RIGHT, game_clock.GetDeltaTime());
 }
 
 // GLFW: Whenever the window size changed (by OS or user resize) this callback function executes
