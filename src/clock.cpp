@@ -2,7 +2,7 @@
 
 Clock::Clock()
 {
-    current_tick = std::chrono::high_resolution_clock::now();
+    current_tick = std::chrono::steady_clock::now();
     last_tick = current_tick;
     init_tick = current_tick;
     delta_time = 0;
@@ -12,7 +12,7 @@ Clock::Clock()
 void Clock::Update()
 {
     last_tick = current_tick;
-    current_tick = std::chrono::high_resolution_clock::now();
+    current_tick = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> c_delta_time = current_tick - last_tick;
     delta_time = c_delta_time.count();
