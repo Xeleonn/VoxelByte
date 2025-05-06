@@ -183,6 +183,9 @@ int main()
     // Render loop
     while (!glfwWindowShouldClose(window))
     {   
+        // Update clock
+        game_clock.Update();
+
         // Input
         processInput(window);
 
@@ -194,13 +197,6 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // ImGui window elements
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::Text("Voxel Byte window test");
-        ImGui::Text("Time: %lf", game_clock.GetTime());
-        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-        ImGui::Text("Fps: %f", game_clock.GetFPS());
-        ImGui::End();
         // Activate shader
         ourShader.use();
 
@@ -231,7 +227,10 @@ int main()
 
         // ImGui window elements
         ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::Text("Voxel Byte window test");
+            ImGui::Text("Voxel Byte window test");
+            ImGui::Text("Time: %lf", game_clock.GetTime());
+            ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+            ImGui::Text("Fps: %f", game_clock.GetFPS());
         ImGui::End();
 
         // ImGui render
