@@ -205,7 +205,7 @@ int main()
 
     // Render boxes
     glBindVertexArray(VAO);
-    voxel.DrawVoxel(10, ourShader);
+    voxel.DrawVoxel(91, ourShader);
 
     // ImGui window elements
     ImGui::SetNextWindowSize(ImVec2(200, 300));
