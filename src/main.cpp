@@ -24,6 +24,7 @@ void processInput(GLFWwindow *window);
 // Settings
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
+bool wireframeMode = false;
 
 // Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -34,6 +35,7 @@ bool firstMouse = true;
 // Initialize clock
 Clock game_clock;
 
+// Initialize voxel
 Voxel voxel;
 
 int main()
@@ -96,47 +98,47 @@ int main()
     float vertices[] = {
         // positions          // colors
         // Front face (Red)
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-right
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-left
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
+        -1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+         1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
+         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-right
+         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-right
+        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-left
+        -1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
         // Back face (Green)
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
-         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-right
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-left
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
+        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-right
+         1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-right
+        -1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-left
+        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
         // Left face (Blue)
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
-        -0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // top-back
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // bottom-front
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
+        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-front
+        -1.0f,  1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-back
+        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // bottom-back
+        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // bottom-back
+        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // bottom-front
+        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-front
         // Right face (Yellow)
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // top-back
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // bottom-front
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
+         1.0f,  1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-front
+         1.0f,  1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // top-back
+         1.0f, -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-back
+         1.0f, -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-back
+         1.0f, -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // bottom-front
+         1.0f,  1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-front
         // Bottom face (Cyan)
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-right
-         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-right
-         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-right
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-left
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-left
+         1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-right
+         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-right
+         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-right
+        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-left
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-left
         // Top face (Magenta)
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-left
-         0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-right
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-right
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-right
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-left
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f  // back-left
+        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f, // back-left
+         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f, // back-right
+         1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-right
+         1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-right
+        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-left
+        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f  // back-left
     };
 
     // Configure global opengl state
@@ -172,54 +174,60 @@ int main()
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
-    // Update clock
-    game_clock.Update();
+        // Update clock
+        game_clock.Update();
 
-    // Input
-    processInput(window);
+        // Input
+        processInput(window);
 
-    // Render
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-    // Activate shader
-    ourShader.use();
+        // Activate shader
+        ourShader.use();
 
-    // Pass projection matrix to shader (note that in this case it could change every frame)
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        // Pass projection matrix to shader (note that in this case it could change every frame)
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    // Camera/view transformation
-    glm::mat4 view = camera.GetViewMatrix();
-    unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        // Camera/view transformation
+        glm::mat4 view = camera.GetViewMatrix();
+        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-    // Render boxes
-    glBindVertexArray(VAO);
-    voxel.DrawVoxel(91, ourShader);
+        // Render boxes
+        glBindVertexArray(VAO);
+        voxel.DrawVoxel(91, ourShader);
 
-    // ImGui window elements
-    ImGui::SetNextWindowSize(ImVec2(200, 300));
-    ImGui::SetNextWindowPos(ImVec2(25, 25));
-    ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-    ImGui::Text("Time: %.2f", game_clock.GetTime());
-    ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-    ImGui::Text("Fps: %.2f", game_clock.GetFPS());
-    ImGui::Text("Voxels generated: %d", voxel.GetVoxelsGenerated());
-    ImGui::End();
+        // ImGui window elements
+        ImGui::SetNextWindowSize(ImVec2(200, 300));
+        ImGui::SetNextWindowPos(ImVec2(25, 25));
+        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Text("Time: %.2f", game_clock.GetTime());
+        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+        ImGui::Text("Fps: %.2f", game_clock.GetFPS());
+        ImGui::Text("Voxels generated: %d", voxel.GetVoxelsGenerated());
+        ImGui::Checkbox("Wireframe meshes", &wireframeMode);
+        if (wireframeMode == true) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        ImGui::End();
 
-    // ImGui render
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ImGui render
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    // GLFW: swap buffers and poll IO events. (keys pressed/released, mouse moved etc.)
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+        // GLFW: swap buffers and poll IO events. (keys pressed/released, mouse moved etc.)
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     // Terminate ImGui resources.
