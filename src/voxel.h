@@ -5,19 +5,22 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #include "shader.h"
+#include "clock.h"
 
 class Voxel
 {
     public:
         Voxel();
-        void DrawVoxel(int voxels, Shader ourShader);
+        void AddVoxel(float x, float y, float z, Clock clock);
+        void DrawVoxel(int voxels, Shader shader);
         int GetVoxelsGenerated();
 
     private:
         int voxelsGenerated;
         float vertices;
-        glm::vec3 cubePositions;
+        std::vector<glm::vec3> cubePositions;
 };
 #endif

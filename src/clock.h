@@ -1,3 +1,6 @@
+#ifndef CLOCK_H
+#define CLOCK_H
+
 #include <chrono>
 
 class Clock
@@ -17,3 +20,5 @@ class Clock
         std::chrono::_V2::steady_clock::time_point init_tick;
 
 };
+
+#endif

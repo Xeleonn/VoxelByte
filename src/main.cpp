@@ -9,10 +9,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.h"
 #include "clock.h"
-#include "voxel.h"
+#include "shader.h"
 #include "camera.h"
+#include "voxel.h"
 
 #include <iostream>
 
@@ -31,6 +31,9 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+
+// Lighting
+glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
 // Initialize clock
 Clock game_clock;
@@ -68,100 +71,152 @@ int main()
         return -1;
     }
 
-    // Vertex shader
-    const char *vertexShaderSource
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    const char *vertexLightingShader
     {
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
+    "layout (location = 1) in vec3 aNormal;\n"
+    "out vec3 FragPos;\n"
+    "out vec3 Normal;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "void main() {\n"
-    "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0"
+    "    FragPos = vec3(model * vec4(aPos, 1.0));\n"
+    "    Normal = mat3(transpose(inverse(model))) * aNormal;\n"  
+    "    gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+    "}\n"
     };
 
-    // Fragment shader
-    const char *fragmentShaderSource
+    const char *fragmentLightingShader
     {
     "#version 330 core\n"
     "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
+    "in vec3 Normal;\n"
+    "in vec3 FragPos;\n"  
+    "uniform vec3 lightPos;\n" 
+    "uniform vec3 viewPos;\n" 
+    "uniform vec3 lightColor;\n"
+    "uniform vec3 objectColor;\n"
     "void main() {\n"
-    "   FragColor = vec4(ourColor, 1.0f);\n"
-    "}\n\0"
+    "   float ambientStrength = 0.1;\n"
+    "   vec3 ambient = ambientStrength * lightColor;\n"
+    "   vec3 norm = normalize(Normal);\n"
+    "   vec3 lightDir = normalize(lightPos - FragPos);\n"
+    "   float diff = max(dot(norm, lightDir), 0.0);\n"
+    "   vec3 diffuse = diff * lightColor;\n"
+    "   float specularStrength = 0.5;\n"
+    "   vec3 viewDir = normalize(viewPos - FragPos);\n"
+    "   vec3 reflectDir = reflect(-lightDir, norm);\n"  
+    "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
+    "   vec3 specular = specularStrength * spec * lightColor;\n"  
+    "   vec3 result = (ambient + diffuse + specular) * objectColor;\n"
+    "   FragColor = vec4(result, 1.0);\n"
+    "}\n" 
     };
 
-    float vertices[] = {
-        // positions          // colors
-        // Front face (Red)
-        -1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-         1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
-         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-right
-         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-right
-        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // top-left
-        -1.0f, -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-        // Back face (Green)
-        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-         1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-right
-         1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-right
-        -1.0f,  1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // top-left
-        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-        // Left face (Blue)
-        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-front
-        -1.0f,  1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-back
-        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // bottom-back
-        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f, 1.0f, // bottom-back
-        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // bottom-front
-        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-front
-        // Right face (Yellow)
-         1.0f,  1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-front
-         1.0f,  1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // top-back
-         1.0f, -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-back
-         1.0f, -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-back
-         1.0f, -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // bottom-front
-         1.0f,  1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-front
-        // Bottom face (Cyan)
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-left
-         1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-right
-         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-right
-         1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-right
-        -1.0f, -1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // front-left
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f, 1.0f, // back-left
-        // Top face (Magenta)
-        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f, // back-left
-         1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f, // back-right
-         1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-right
-         1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-right
-        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // front-left
-        -1.0f,  1.0f, -1.0f,  1.0f, 0.0f, 1.0f  // back-left
+    const char *vertexLightCubeShader
+    {
+    "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n" 
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main() {\n"
+    "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+    "}\n"
+    };
+
+    const char *fragmentLightCubeShader
+    {
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0);\n"
+    "}\n"
     };
 
     // Configure global opengl state
     glEnable(GL_DEPTH_TEST);
 
     // Build and compile our shader program
-    Shader ourShader(vertexShaderSource, fragmentShaderSource);
+    // build and compile our shader zprogram
+    // ------------------------------------
+    Shader lightingShader(vertexLightingShader, fragmentLightingShader);
+    Shader lightCubeShader(vertexLightCubeShader, fragmentLightCubeShader);
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
+    // first, configure the cube's VAO (and VBO)
+    unsigned int VBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Position attribute
+    glBindVertexArray(cubeVAO);
+
+    // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // Color attribute
+    // normal attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -170,6 +225,7 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+    io.IniFilename = nullptr; // Disables imgui.ini from generating
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -188,27 +244,46 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Activate shader
-        ourShader.use();
+        // Activate shaders
+        lightingShader.use();
+        lightingShader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("lightPos", lightPos);
+        lightingShader.setVec3("viewPos", camera.Position);
 
-        // Pass projection matrix to shader (note that in this case it could change every frame)
+        // View/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-        // Camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
-        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
-        // Render boxes
-        glBindVertexArray(VAO);
-        voxel.DrawVoxel(91, ourShader);
+        // World transformation
+        glm::mat4 model = glm::mat4(1.0f);
+        lightingShader.setMat4("model", model);
+
+        // Draw cubes
+        glBindVertexArray(cubeVAO);
+        voxel.DrawVoxel(90, lightingShader);
+
+        // Draw lamp
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.setMat4("model", model);
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+            voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
-        ImGui::SetNextWindowSize(ImVec2(200, 300));
+        ImGui::SetNextWindowSize(ImVec2(200, 200));
         ImGui::SetNextWindowPos(ImVec2(25, 25));
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Begin("Info", nullptr, ImGuiWindowFlags_NoSavedSettings);
         ImGui::Text("Time: %.2f", game_clock.GetTime());
         ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
         ImGui::Text("Fps: %.2f", game_clock.GetFPS());
@@ -236,7 +311,8 @@ int main()
     ImGui::DestroyContext();
 
     // Optional: de-allocates all resources once they've outlived their purpose.
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &lightCubeVAO);
     glDeleteBuffers(1, &VBO);
 
     // GLFW: terminate, clearing all previously allocated GLFW resources.
@@ -247,7 +323,6 @@ int main()
 // Process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
-    
     if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
