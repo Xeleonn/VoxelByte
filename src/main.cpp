@@ -95,47 +95,42 @@ int main()
 
     float vertices[] = {
         // positions          // colors
-                                                // Front face (Red)
+        // Front face (Red)
         -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
          0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-right
          0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
          0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-right
         -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // top-left
         -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, // bottom-left
-    
-                                                // Back face (Green)
+        // Back face (Green)
         -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
          0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-right
          0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
          0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-right
         -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // top-left
         -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // bottom-left
-    
-                                                // Left face (Blue)
+        // Left face (Blue)
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
         -0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // top-back
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // bottom-back
         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // bottom-front
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f, // top-front
-    
-                                                // Right face (Yellow)
+        // Right face (Yellow)
          0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
          0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // top-back
          0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
          0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, // bottom-back
          0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // bottom-front
          0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, // top-front
-    
-                                                // Bottom face (Cyan)
+        // Bottom face (Cyan)
         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, // back-right
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // front-right
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f, // front-right
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-right
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-right
+         0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-right
         -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // front-left
         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // back-left
-    
-                                                // Top face (Magenta)
+        // Top face (Magenta)
         -0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-left
          0.5f,  0.5f, -0.5f,  1.0f, 0.0f, 1.0f, // back-right
          0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, // front-right
@@ -166,6 +161,7 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;

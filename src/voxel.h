@@ -14,7 +14,6 @@ class Voxel
         Voxel();
         void DrawVoxel(int voxels, Shader ourShader);
         int GetVoxelsGenerated();
-        float GetVertices();
 
     private:
         int voxelsGenerated;
