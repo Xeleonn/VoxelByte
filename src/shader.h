@@ -17,7 +17,7 @@ public:
     // ------------------------------------------------------------------------
     Shader(const char* vShaderCode, const char* fShaderCode)
     {
-        // 2. compile shaders
+        // compile shaders
         unsigned int vertex, fragment;
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);

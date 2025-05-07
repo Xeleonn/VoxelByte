@@ -26,6 +26,11 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 bool wireframeMode = false;
 
+// Voxel color values
+float v_red = 1.0f;
+float v_green = 1.0f;
+float v_blue = 1.0f;
+
 // Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
@@ -185,12 +190,9 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Build and compile our shader program
-    // build and compile our shader zprogram
-    // ------------------------------------
     Shader lightingShader(vertexLightingShader, fragmentLightingShader);
     Shader lightCubeShader(vertexLightCubeShader, fragmentLightCubeShader);
 
-    // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
@@ -246,7 +248,7 @@ int main()
 
         // Activate shaders
         lightingShader.use();
-        lightingShader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
+        lightingShader.setVec3("objectColor", v_red, v_green, v_blue);
         lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         lightingShader.setVec3("lightPos", lightPos);
         lightingShader.setVec3("viewPos", camera.Position);
@@ -281,19 +283,26 @@ int main()
             voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
-        ImGui::SetNextWindowSize(ImVec2(200, 200));
+        ImGui::SetNextWindowSize(ImVec2(200, 250));
         ImGui::SetNextWindowPos(ImVec2(25, 25));
-        ImGui::Begin("Info", nullptr, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
         ImGui::Text("Time: %.2f", game_clock.GetTime());
         ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-        ImGui::Text("Fps: %.2f", game_clock.GetFPS());
-        ImGui::Text("Voxels generated: %d", voxel.GetVoxelsGenerated());
-        ImGui::Checkbox("Wireframe meshes", &wireframeMode);
+        ImGui::Text("%.2f", game_clock.GetFPS());
+        ImGui::SameLine();
+        ImGui::Text(" FPS");
+        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
+        ImGui::Text("");
+        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
         if (wireframeMode == true) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         } else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+        ImGui::Text("\nVoxel Color:");
+        ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
+        ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
+        ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
         ImGui::End();
 
         // ImGui render
