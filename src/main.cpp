@@ -295,8 +295,8 @@ int main()
 
         voxel.RenderMesh(test_mesh, VAO);
 
-        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-            voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
+        //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+        //    voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
         updateImGui();

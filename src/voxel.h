@@ -55,9 +55,9 @@ class Voxel
         Chunk GenerateTestChunk();
         OpenGLMesh GenerateChunkMesh(Chunk chunk);
         
-        void SetupRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO);
-        void RenderMesh(OpenGLMesh mesh, GLuint VAO);
-        void FreeRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO);
+        void SetupRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO);
+        void RenderMesh(OpenGLMesh mesh, GLuint &VAO);
+        void FreeRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO);
 
     private:
         int voxelsGenerated;

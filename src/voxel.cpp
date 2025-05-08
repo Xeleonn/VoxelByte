@@ -113,8 +113,8 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                if (y % 3 == 0) vd = {7, 2, 15};
-                else vd = {4, 0, 15};
+                vd = {7, 2, 15};
+                //else vd = {4, 0, 15};
                 new_chunk.voxel_grid[x][y][z] = vd;
             }
         }
@@ -242,7 +242,7 @@ void Voxel::RenderMesh(OpenGLMesh mesh)
 }
 */
 
-void  Voxel::SetupRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO)
+void  Voxel::SetupRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO)
 {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -259,13 +259,13 @@ void  Voxel::SetupRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO
     glEnableVertexAttribArray(0);
 }
 
-void  Voxel::RenderMesh(OpenGLMesh mesh, GLuint VAO)
+void  Voxel::RenderMesh(OpenGLMesh mesh, GLuint &VAO)
 {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
 }
 
-void  Voxel::FreeRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO)
+void  Voxel::FreeRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO)
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
