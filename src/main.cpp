@@ -266,8 +266,13 @@ int main()
         lightingShader.setMat4("model", model);
 
         // Draw cubes
+<<<<<<< Updated upstream
         glBindVertexArray(cubeVAO);
         voxel.DrawVoxel(90, lightingShader);
+=======
+        //glBindVertexArray(cubeVAO);
+        //voxel.DrawVoxel(90, lightingShader);
+>>>>>>> Stashed changes
 
         // Draw lamp
         lightCubeShader.use();
@@ -281,11 +286,40 @@ int main()
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        voxel.RenderMesh(test_mesh, VAO);
+
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
+<<<<<<< Updated upstream
         updateImGui();
+=======
+        ImGui::SetNextWindowSize(ImVec2(200, 250));
+        ImGui::SetNextWindowPos(ImVec2(25, 25));
+        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::Text("Time: %.2f", game_clock.GetTime());
+        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+        ImGui::Text("%.2f", game_clock.GetFPS());
+        ImGui::SameLine();
+        ImGui::Text(" FPS");
+        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
+        ImGui::Text("");
+        ImGui::Text("Chunk arb data: %d", test_chunk.voxel_grid[13][12][4].properties);
+        ImGui::Text("Mesh: vtx: %d idx: %d", test_mesh.vertices.size(), test_mesh.indices.size());
+        ImGui::Text("");
+        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
+        if (wireframeMode == true) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        ImGui::Text("\nVoxel Color:");
+        ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
+        ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
+        ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
+        ImGui::End();
+>>>>>>> Stashed changes
 
         // ImGui render
         ImGui::Render();
