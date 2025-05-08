@@ -7,7 +7,7 @@
 
 std::vector<glm::vec3> cubePositions = {};
 
-Voxel::Voxel() {
+Voxel::Voxel() : last_x(0), last_z(0), chunk_count(0) {
 }
 
 
@@ -26,21 +26,29 @@ void Voxel::AddVoxel(float x, float y, float z, Clock clock) {
 
 
 Voxel::Chunk Voxel::GenerateTestChunk() {
-    Chunk new_chunk;
-    // These origins are for the chunk's position in a larger world, not used by GenerateChunkMesh directly for vertex coords
-    new_chunk.origin_x = 5;
-    new_chunk.origin_y = 2;
-    new_chunk.origin_z = 14;
 
-    for (int x = 0; x < CHUNK_SIZE; x++) {
-        for (int y = 0; y < CHUNK_SIZE; y++) {
-            for (int z = 0; z < CHUNK_SIZE; z++) {
+    Chunk new_chunk(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE);
+    chunk_count += 1;
+
+    if (chunk_count <= 1)
+    {
+        new_chunk.origin_x = last_x + new_chunk.dim_x / 2;
+        new_chunk.origin_z = last_z + new_chunk.dim_z / 2;
+    }
+
+    for (int x = 0; x < new_chunk.dim_x; x++) {
+        for (int y = 0; y < new_chunk.dim_y; y++) {
+            for (int z = 0; z < new_chunk.dim_z; z++) {
                 VoxelData vd;
                 vd = {0, 2, 0}; // id=7, properties=2 (meshable), light=15
-                new_chunk.voxel_grid[x][y][z] = vd;
+                new_chunk.getVoxel(x, y, z) = vd;
             }
         }
     }
+
+    last_x = new_chunk.origin_x;
+    last_z = new_chunk.origin_z;
+
     return new_chunk;
 }
 
@@ -67,7 +75,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
     for (int x_coord = 0; x_coord < CHUNK_SIZE; x_coord++) {
         for (int y_coord = 0; y_coord < CHUNK_SIZE; y_coord++) {
             for (int z_coord = 0; z_coord < CHUNK_SIZE; z_coord++) {
-                if (chunk.voxel_grid[x_coord][y_coord][z_coord].properties == 2) { // Only mesh 'solid' voxels
+                if (chunk.getVoxel(x_coord, y_coord, z_coord).properties == 2) { // Only mesh 'solid' voxels
                     float fx = (float)x_coord;
                     float fy = (float)y_coord;
                     float fz = (float)z_coord;
@@ -76,7 +84,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     // Normals: +Y (top), -Y (bottom), +X (right), -X (left), +Z (back), -Z (front)
 
                     // Top face (+Y) Normal: (0, 1, 0)
-                    if (y_coord + 1 >= CHUNK_SIZE || chunk.voxel_grid[x_coord][y_coord + 1][z_coord].properties == 0) {
+                    if (y_coord + 1 >= CHUNK_SIZE || chunk.getVoxel(x_coord, y_coord + 1, z_coord).properties == 0) {
                         float nx=0.0f, ny=1.0f, nz=0.0f;
                         int v0 = chunk_mesh.AddVertex(fx,     fy + 1, fz,     nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx + 1, fy + 1, fz,     nx,ny,nz);
@@ -87,7 +95,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     }
 
                     // Bottom face (-Y) Normal: (0, -1, 0)
-                    if (y_coord - 1 < 0 || chunk.voxel_grid[x_coord][y_coord - 1][z_coord].properties == 0) {
+                    if (y_coord - 1 < 0 || chunk.getVoxel(x_coord, y_coord - 1, z_coord).properties == 0) {
                         float nx=0.0f, ny=-1.0f, nz=0.0f;
                         int v0 = chunk_mesh.AddVertex(fx,     fy, fz,     nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx + 1, fy, fz,     nx,ny,nz);
@@ -98,7 +106,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     }
 
                     // Right face (+X) Normal: (1, 0, 0)
-                    if (x_coord + 1 >= CHUNK_SIZE || chunk.voxel_grid[x_coord + 1][y_coord][z_coord].properties == 0) {
+                    if (x_coord + 1 >= CHUNK_SIZE || chunk.getVoxel(x_coord + 1, y_coord, z_coord).properties == 0) {
                         float nx=1.0f, ny=0.0f, nz=0.0f;
                         int v0 = chunk_mesh.AddVertex(fx + 1, fy,     fz,     nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx + 1, fy + 1, fz,     nx,ny,nz);
@@ -109,7 +117,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     }
 
                     // Left face (-X) Normal: (-1, 0, 0)
-                    if (x_coord - 1 < 0 || chunk.voxel_grid[x_coord - 1][y_coord][z_coord].properties == 0) {
+                    if (x_coord - 1 < 0 || chunk.getVoxel(x_coord - 1, y_coord, z_coord).properties == 0) {
                         float nx=-1.0f, ny=0.0f, nz=0.0f;
                         int v0 = chunk_mesh.AddVertex(fx, fy,     fz,     nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx, fy + 1, fz,     nx,ny,nz);
@@ -120,7 +128,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     }
 
                     // Back face (+Z) Normal: (0, 0, 1)
-                    if (z_coord + 1 >= CHUNK_SIZE || chunk.voxel_grid[x_coord][y_coord][z_coord + 1].properties == 0) {
+                    if (z_coord + 1 >= CHUNK_SIZE || chunk.getVoxel(x_coord, y_coord, z_coord + 1).properties == 0) {
                         float nx=0.0f, ny=0.0f, nz=1.0f;
                         int v0 = chunk_mesh.AddVertex(fx,     fy,     fz + 1, nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx + 1, fy,     fz + 1, nx,ny,nz);
@@ -131,7 +139,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk) {
                     }
 
                     // Front face (-Z) Normal: (0, 0, -1)
-                    if (z_coord - 1 < 0 || chunk.voxel_grid[x_coord][y_coord][z_coord - 1].properties == 0) {
+                    if (z_coord - 1 < 0 || chunk.getVoxel(x_coord, y_coord, z_coord - 1).properties == 0) {
                         float nx=0.0f, ny=0.0f, nz=-1.0f;
                         int v0 = chunk_mesh.AddVertex(fx,     fy,     fz, nx,ny,nz);
                         int v1 = chunk_mesh.AddVertex(fx + 1, fy,     fz, nx,ny,nz);
