@@ -34,22 +34,22 @@ float v_green = 1.0f;
 float v_blue = 1.0f;
 
 // Camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(CHUNK_SIZE / 2, CHUNK_SIZE + 10.0f, CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+float viewDistance = 500.0f;
 
 // Lighting
-glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+glm::vec3 lightPos(CHUNK_SIZE / 2.0f, CHUNK_SIZE * 1.5f, CHUNK_SIZE / 2.0f + 5.0f); // Position light relative to chunk
 
 // Initialize clock
 Clock game_clock;
 
-// Initialize voxel
+// Initialize voxel system
 Voxel voxel;
 
-int main()
-{
+int main() {
     // GLFW: Initialize and configure
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -58,8 +58,7 @@ int main()
 
     // GLFW window creation
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "VoxelByte", NULL, NULL);
-    if (window == NULL)
-    {
+    if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -72,13 +71,13 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // GLAD: Load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
-    float vertices[] = {
+    float light_cube_vertices[] = {
+        // positions          // normals
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
          0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -122,8 +121,7 @@ int main()
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    const char *vertexLightingShader
-    {
+    const char *vertexLightingShaderSrc =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aNormal;\n"
@@ -134,95 +132,72 @@ int main()
     "uniform mat4 projection;\n"
     "void main() {\n"
     "    FragPos = vec3(model * vec4(aPos, 1.0));\n"
-    "    Normal = mat3(transpose(inverse(model))) * aNormal;\n"  
+    "    Normal = mat3(transpose(inverse(model))) * aNormal;\n"
     "    gl_Position = projection * view * vec4(FragPos, 1.0);\n"
-    "}\n"
-    };
+    "}\n";
 
-    const char *fragmentLightingShader
-    {
+    const char *fragmentLightingShaderSrc =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
     "in vec3 Normal;\n"
-    "in vec3 FragPos;\n"  
-    "uniform vec3 lightPos;\n" 
-    "uniform vec3 viewPos;\n" 
+    "in vec3 FragPos;\n"
+    "uniform vec3 lightPos;\n"
+    "uniform vec3 viewPos;\n"
     "uniform vec3 lightColor;\n"
     "uniform vec3 objectColor;\n"
     "void main() {\n"
-    "   float ambientStrength = 0.1;\n"
-    "   vec3 ambient = ambientStrength * lightColor;\n"
-    "   vec3 norm = normalize(Normal);\n"
-    "   vec3 lightDir = normalize(lightPos - FragPos);\n"
-    "   float diff = max(dot(norm, lightDir), 0.0);\n"
-    "   vec3 diffuse = diff * lightColor;\n"
-    "   float specularStrength = 0.5;\n"
-    "   vec3 viewDir = normalize(viewPos - FragPos);\n"
-    "   vec3 reflectDir = reflect(-lightDir, norm);\n"  
-    "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
-    "   vec3 specular = specularStrength * spec * lightColor;\n"  
-    "   vec3 result = (ambient + diffuse + specular) * objectColor;\n"
-    "   FragColor = vec4(result, 1.0);\n"
-    "}\n" 
-    };
+    "    float ambientStrength = 0.2;\n"
+    "    vec3 ambient = ambientStrength * lightColor;\n"
+    "    vec3 norm = normalize(Normal);\n"
+    "    vec3 lightDir = normalize(lightPos - FragPos);\n"
+    "    float diff = max(dot(norm, lightDir), 0.0);\n"
+    "    vec3 diffuse = diff * lightColor;\n"
+    "    float specularStrength = 0.5;\n"
+    "    vec3 viewDir = normalize(viewPos - FragPos);\n"
+    "    vec3 reflectDir = reflect(-lightDir, norm);\n"
+    "    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
+    "    vec3 specular = specularStrength * spec * lightColor;\n"
+    "    vec3 result = (ambient + diffuse + specular) * objectColor;\n"
+    "    FragColor = vec4(result, 1.0);\n"
+    "}\n";
 
-    const char *vertexLightCubeShader
-    {
+    const char *vertexLightCubeShaderSrc =
     "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n" 
+    "layout (location = 0) in vec3 aPos;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "void main() {\n"
     "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-    "}\n"
-    };
+    "}\n";
 
-    const char *fragmentLightCubeShader
-    {
+    const char *fragmentLightCubeShaderSrc =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0);\n"
-    "}\n"
-    };
+    "    FragColor = vec4(1.0); // White light source\n"
+    "}\n";
 
-    // Configure global opengl state
     glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_CULL_FACE); // Optional: enable face culling if confident in winding order
+    // glCullFace(GL_BACK);
 
-    // Build and compile our shader program
-    Shader lightingShader(vertexLightingShader, fragmentLightingShader);
-    Shader lightCubeShader(vertexLightCubeShader, fragmentLightCubeShader);
+    Shader lightingShader(vertexLightingShaderSrc, fragmentLightingShaderSrc);
+    Shader lightCubeShader(vertexLightCubeShaderSrc, fragmentLightCubeShaderSrc);
 
-    /*
-    unsigned int VBO, cubeVAO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(cubeVAO);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-
-    unsigned int lightCubeVAO;
+    // Setup for the light cube (lamp) VAO
+    unsigned int lightCubeVBO, lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
+    glGenBuffers(1, &lightCubeVBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(light_cube_vertices), light_cube_vertices, GL_STATIC_DRAW);
+
     glBindVertexArray(lightCubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
+    // Position attribute for light cube
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    */
-
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -231,127 +206,100 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    io.IniFilename = nullptr; // Disables imgui.ini from generating
+    io.IniFilename = nullptr;
 
-    //Test mesher
+    // Test chunk generation and mesh setup
     Voxel::Chunk test_chunk = voxel.GenerateTestChunk();
     Voxel::OpenGLMesh test_mesh = voxel.GenerateChunkMesh(test_chunk);
 
-    GLuint VBO, EBO, VAO;
-
-    voxel.SetupRenderMesh(test_mesh, VBO, EBO, VAO);
+    GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
+    if (test_mesh.vertex_data.size() > 0 && test_mesh.indices.size() > 0) {
+        voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
+    } else {
+        std::cout << "Warning: Test chunk mesh is empty. Nothing to render for the chunk." << std::endl;
+    }
+    
 
     // Render loop
-    while (!glfwWindowShouldClose(window))
-    {
-        // Update clock
+    while (!glfwWindowShouldClose(window)) {
         game_clock.Update();
-
-        // Input
         processInput(window);
 
-        // Render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.7f, 0.7f, 1.0f, 1.0f); // Darker background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Activate shaders
-        lightingShader.use();
-        lightingShader.setVec3("objectColor", v_red, v_green, v_blue);
-        lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("lightPos", lightPos);
-        lightingShader.setVec3("viewPos", camera.Position);
-
-        // View/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // View/projection transformations (common to both shaders)
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, viewDistance);
         glm::mat4 view = camera.GetViewMatrix();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
 
-        // World transformation
-        glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
+        // Render the chunk
+        if (chunkVAO != 0) { // Only render if VAO was successfully created
+            lightingShader.use();
+            lightingShader.setVec3("objectColor", v_red, v_green, v_blue);
+            lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+            lightingShader.setVec3("lightPos", lightPos);
+            lightingShader.setVec3("viewPos", camera.Position);
+            lightingShader.setMat4("projection", projection);
+            lightingShader.setMat4("view", view);
 
-        // Draw cubes
-        //glBindVertexArray(cubeVAO);
-        //voxel.DrawVoxel(90, lightingShader);
-        //glBindVertexArray(cubeVAO);
-        //voxel.DrawVoxel(90, lightingShader);
+            glm::mat4 model = glm::mat4(1.0f); // Chunk is at origin (0,0,0) in its local space
+            // If chunk.origin_x,y,z are to be used for world position, translate here:
+            // model = glm::translate(model, glm::vec3(test_chunk.origin_x, test_chunk.origin_y, test_chunk.origin_z));
+            lightingShader.setMat4("model", model);
+            
+            voxel.RenderMesh(test_mesh, chunkVAO);
+        }
 
-        // Draw lamp
+        // Render the light cube (lamp)
         lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightCubeShader.setMat4("model", model);
+        glm::mat4 modelLamp = glm::mat4(1.0f);
+        modelLamp = glm::translate(modelLamp, lightPos);
+        modelLamp = glm::scale(modelLamp, glm::vec3(0.2f));
+        lightCubeShader.setMat4("model", modelLamp);
 
-        //glBindVertexArray(lightCubeVAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
 
-        voxel.RenderMesh(test_mesh, VAO);
 
-        //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-        //    voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
+        // Example of using AddVoxel and DrawVoxel (old system, may not be what you want for chunks)
+        // if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        //     voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
+        // }
+        // If you were to use DrawVoxel, you'd bind a VAO for a single cube first
+        // e.g. glBindVertexArray(someSingleCubeVAO); // This VAO would need pos and normal attribs
+        // voxel.DrawVoxel(voxel.GetVoxelsGenerated(), lightingShader);
 
-        // ImGui window elements
         updateImGui();
-        ImGui::SetNextWindowSize(ImVec2(200, 250));
-        ImGui::SetNextWindowPos(ImVec2(25, 25));
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::Text("Time: %.2f", game_clock.GetTime());
-        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-        ImGui::Text("%.2f", game_clock.GetFPS());
-        ImGui::SameLine();
-        ImGui::Text(" FPS");
-        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
-        ImGui::Text("");
-        ImGui::Text("Chunk arb data: %d", test_chunk.voxel_grid[13][12][4].properties);
-        ImGui::Text("Mesh: vtx: %d idx: %d", test_mesh.vertices.size(), test_mesh.indices.size());
-        ImGui::Text("");
-        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
-        if (wireframeMode == true) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        ImGui::Text("\nVoxel Color:");
-        ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
-        ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
-        ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
-        ImGui::End();
-
-        // ImGui render
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // GLFW: swap buffers and poll IO events. (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Terminate ImGui resources.
+    // Cleanup
+    if (chunkVAO != 0) {
+        voxel.FreeRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
+    }
+    glDeleteVertexArrays(1, &lightCubeVAO);
+    glDeleteBuffers(1, &lightCubeVBO);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    // Optional: de-allocates all resources once they've outlived their purpose.
-    //glDeleteVertexArrays(1, &cubeVAO);
-    //glDeleteVertexArrays(1, &lightCubeVAO);
-    //glDeleteBuffers(1, &VBO);
-
-    // GLFW: terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();
     return 0;
 }
 
-// Process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow *window)
-{
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
@@ -360,88 +308,80 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    float deltaTime = game_clock.GetDeltaTime();
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, game_clock.GetDeltaTime());
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, game_clock.GetDeltaTime());
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, game_clock.GetDeltaTime());
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, game_clock.GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, game_clock.GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, game_clock.GetDeltaTime());
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
-// GLFW: Whenever the window size changed (by OS or user resize) this callback function executes
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    // Only process mouse if cursor is disabled (i.e., not in ImGui interaction mode)
+    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+        float xpos = static_cast<float>(xposIn);
+        float ypos = static_cast<float>(yposIn);
 
-// GLFW: Whenever the mouse moves, this callback is called
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
+        if (firstMouse) {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
 
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; 
 
-    if (firstMouse)
-    {
         lastX = xpos;
         lastY = ypos;
-        firstMouse = false;
+
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    } else { // If cursor is normal, reset firstMouse so movement isn't jerky when re-disabling
+        firstMouse = true;
     }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-// GLFW: Whenever the mouse scroll wheel scrolls, this callback is called
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+        camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    }
 }
 
-void updateImGui()
-{
-    ImGui::SetNextWindowSize(ImVec2(200, 250));
-        ImGui::SetNextWindowPos(ImVec2(25, 25));
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-        ImGui::Text("Time: %.2f", game_clock.GetTime());
-        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-        ImGui::Text("%.2f", game_clock.GetFPS());
-        ImGui::SameLine();
-        ImGui::Text("FPS");
-        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
+void updateImGui() {
+    ImGui::SetNextWindowSize(ImVec2(250, 300));
+    ImGui::SetNextWindowPos(ImVec2(10, 10));
+    ImGui::Begin("VoxelByte Info", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+    ImGui::Text("Time: %.2f s", game_clock.GetTime());
+    ImGui::Text("Delta Time: %.4f ms", game_clock.GetDeltaTime() * 1000.0f); // ms
+    ImGui::Text("%.1f FPS", game_clock.GetFPS());
 
-        ImGui::Text("Camera Position:");
-        ImGui::Text("X: %.2f", camera.Position.x);
-        ImGui::Text("Y: %.2f", camera.Position.y);
-        ImGui::Text("Z: %.2f", camera.Position.z);
-        ImGui::NewLine();
+    ImGui::Separator();
+    ImGui::Text("Camera Position:");
+    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", camera.Position.x, camera.Position.y, camera.Position.z);
+    ImGui::Text("Yaw: %.1f, Pitch: %.1f", camera.Yaw, camera.Pitch);
 
-        if (ImGui::TreeNode("Settings"))
-        {
-            ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
-            if (wireframeMode == true) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            }
-            ImGui::Text("\nVoxel Color:");
-            ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
-            ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
-            ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
-            ImGui::TreePop();
-            ImGui::Spacing();
+    ImGui::Separator();
+    if (ImGui::CollapsingHeader("Settings")) {
+        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
+        if (wireframeMode) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
-        ImGui::End();
+        ImGui::Separator();
+        ImGui::Text("Chunk Color (Lighting):");
+        ImGui::ColorEdit3("Color", &v_red);
+        ImGui::Spacing();
+    }
+    ImGui::End();
 }

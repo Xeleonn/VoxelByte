@@ -1,67 +1,54 @@
 #ifndef VOXEL_H
 #define VOXEL_H
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <vector>
+#include <glad/glad.h> // For GLuint
+#include "shader.h" // Assuming Shader class is used (it was in main.cpp)
+#include "clock.h"  // For AddVoxel method, keep as is
 
-#include "shader.h"
-#include "clock.h"
+#define CHUNK_SIZE 64 // Define chunk size
 
-const int CHUNK_SIZE = 32;
+class Voxel {
+public:
+    Voxel();
 
-class Voxel
-{
-    public:
-        Voxel();
-        void AddVoxel(float x, float y, float z, Clock clock);
-        void DrawVoxel(int voxels, Shader shader);
-        int GetVoxelsGenerated();
+    // Structure for voxel data within a chunk
+    struct VoxelData {
+        unsigned char id;
+        unsigned char properties; // e.g., 0 for air, 1 for solid (generic), 2 for meshable solid
+        unsigned char light_level;
+    };
 
-        enum class VoxelProperties : int
-        {
-            VoxelFlagNull            = 0,
-            VoxelFlagLOD             = 1 << 0,
-            VoxelFlagSolid           = 1 << 1,
-            VoxelFlagInteractable    = 1 << 2
-        };
+    // Structure for a chunk
+    struct Chunk {
+        int origin_x, origin_y, origin_z;
+        VoxelData voxel_grid[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+    };
 
-        struct VoxelData
-        {
-            uint8_t color_idx;
-            int properties;
-            int unused;
-        };
+    // Structure for OpenGL mesh data
+    struct OpenGLMesh {
+        std::vector<float> vertex_data; // Interleaved: x,y,z,nx,ny,nz
+        std::vector<unsigned int> indices;
 
-        struct Chunk
-        {
-            int origin_x;
-            int origin_y;
-            int origin_z;
-            VoxelData voxel_grid[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
-        };
+        // Adds a vertex with position and normal, returns its index
+        int AddVertex(float x, float y, float z, float nx, float ny, float nz);
+        // Adds three indices to form a triangle
+        void AddIndex(int v0, int v1, int v2);
+    };
 
-        struct OpenGLMesh
-        {
-            std::vector<float> vertices;
-            std::vector<unsigned int> indices;
-            
-            int AddVertex(float a, float b, float c);
-            void AddIndex(int v0, int v1, int v2);
-        };
+    void AddVoxel(float x, float y, float z, Clock clock);
 
-        Chunk GenerateTestChunk();
-        OpenGLMesh GenerateChunkMesh(Chunk chunk);
-        
-        void SetupRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO);
-        void RenderMesh(OpenGLMesh mesh, GLuint &VAO);
-        void FreeRenderMesh(OpenGLMesh mesh, GLuint &VBO, GLuint &EBO, GLuint &VAO);
+    Chunk GenerateTestChunk();
+    OpenGLMesh GenerateChunkMesh(Chunk chunk);
 
-    private:
-        int voxelsGenerated;
-        float vertices;
-        std::vector<glm::vec3> cubePositions;
+    // OpenGL resource management for meshes
+    // Pass VBO, EBO, VAO by reference to modify the originals in main
+    void SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+    void RenderMesh(OpenGLMesh mesh, GLuint VAO); // VAO is just an ID here
+    void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+
+private:
 };
-#endif
+
+#endif // VOXEL_H
