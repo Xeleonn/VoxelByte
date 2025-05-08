@@ -99,8 +99,6 @@ void Voxel::DrawVoxel(int voxels, Shader shader)
     }
 }
 
-<<<<<<< Updated upstream
-=======
 Voxel::Chunk Voxel::GenerateTestChunk()
 {
     Chunk new_chunk;
@@ -274,7 +272,6 @@ void  Voxel::FreeRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO)
     glDeleteBuffers(1, &EBO);
 }
 
->>>>>>> Stashed changes
 int Voxel::GetVoxelsGenerated()
 {
     return voxelsGenerated;

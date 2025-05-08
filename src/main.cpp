@@ -195,6 +195,7 @@ int main()
     Shader lightingShader(vertexLightingShader, fragmentLightingShader);
     Shader lightCubeShader(vertexLightCubeShader, fragmentLightCubeShader);
 
+    /*
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
@@ -220,6 +221,7 @@ int main()
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    */
 
 
     // Initialize ImGui
@@ -230,6 +232,14 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     io.IniFilename = nullptr; // Disables imgui.ini from generating
+
+    //Test mesher
+    Voxel::Chunk test_chunk = voxel.GenerateTestChunk();
+    Voxel::OpenGLMesh test_mesh = voxel.GenerateChunkMesh(test_chunk);
+
+    GLuint VBO, EBO, VAO;
+
+    voxel.SetupRenderMesh(test_mesh, VBO, EBO, VAO);
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -266,13 +276,10 @@ int main()
         lightingShader.setMat4("model", model);
 
         // Draw cubes
-<<<<<<< Updated upstream
-        glBindVertexArray(cubeVAO);
-        voxel.DrawVoxel(90, lightingShader);
-=======
         //glBindVertexArray(cubeVAO);
         //voxel.DrawVoxel(90, lightingShader);
->>>>>>> Stashed changes
+        //glBindVertexArray(cubeVAO);
+        //voxel.DrawVoxel(90, lightingShader);
 
         // Draw lamp
         lightCubeShader.use();
@@ -283,8 +290,8 @@ int main()
         model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
         lightCubeShader.setMat4("model", model);
 
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //glBindVertexArray(lightCubeVAO);
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
 
         voxel.RenderMesh(test_mesh, VAO);
 
@@ -292,9 +299,7 @@ int main()
             voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
-<<<<<<< Updated upstream
         updateImGui();
-=======
         ImGui::SetNextWindowSize(ImVec2(200, 250));
         ImGui::SetNextWindowPos(ImVec2(25, 25));
         ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
@@ -319,7 +324,6 @@ int main()
         ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
         ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
         ImGui::End();
->>>>>>> Stashed changes
 
         // ImGui render
         ImGui::Render();
@@ -336,9 +340,9 @@ int main()
     ImGui::DestroyContext();
 
     // Optional: de-allocates all resources once they've outlived their purpose.
-    glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteVertexArrays(1, &lightCubeVAO);
-    glDeleteBuffers(1, &VBO);
+    //glDeleteVertexArrays(1, &cubeVAO);
+    //glDeleteVertexArrays(1, &lightCubeVAO);
+    //glDeleteBuffers(1, &VBO);
 
     // GLFW: terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();

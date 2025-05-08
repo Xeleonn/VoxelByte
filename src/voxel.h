@@ -10,6 +10,8 @@
 #include "shader.h"
 #include "clock.h"
 
+const int CHUNK_SIZE = 32;
+
 class Voxel
 {
     public:
@@ -18,8 +20,6 @@ class Voxel
         void DrawVoxel(int voxels, Shader shader);
         int GetVoxelsGenerated();
 
-<<<<<<< Updated upstream
-=======
         enum class VoxelProperties : int
         {
             VoxelFlagNull            = 0,
@@ -59,7 +59,6 @@ class Voxel
         void RenderMesh(OpenGLMesh mesh, GLuint VAO);
         void FreeRenderMesh(OpenGLMesh mesh, GLuint VBO, GLuint EBO, GLuint VAO);
 
->>>>>>> Stashed changes
     private:
         int voxelsGenerated;
         float vertices;
