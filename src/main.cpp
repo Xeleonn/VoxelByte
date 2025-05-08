@@ -21,6 +21,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
+void updateImGui();
+
 // Settings
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
@@ -283,27 +285,7 @@ int main()
             voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
 
         // ImGui window elements
-        ImGui::SetNextWindowSize(ImVec2(200, 250));
-        ImGui::SetNextWindowPos(ImVec2(25, 25));
-        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::Text("Time: %.2f", game_clock.GetTime());
-        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
-        ImGui::Text("%.2f", game_clock.GetFPS());
-        ImGui::SameLine();
-        ImGui::Text(" FPS");
-        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
-        ImGui::Text("");
-        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
-        if (wireframeMode == true) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        ImGui::Text("\nVoxel Color:");
-        ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
-        ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
-        ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
-        ImGui::End();
+        updateImGui();
 
         // ImGui render
         ImGui::Render();
@@ -388,4 +370,40 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void updateImGui()
+{
+    ImGui::SetNextWindowSize(ImVec2(200, 250));
+        ImGui::SetNextWindowPos(ImVec2(25, 25));
+        ImGui::Begin("VoxelByte", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+        ImGui::Text("Time: %.2f", game_clock.GetTime());
+        ImGui::Text("Delta Time: %lf", game_clock.GetDeltaTime());
+        ImGui::Text("%.2f", game_clock.GetFPS());
+        ImGui::SameLine();
+        ImGui::Text("FPS");
+        ImGui::Text("Voxels Generated: %d", voxel.GetVoxelsGenerated());
+
+        ImGui::Text("Camera Position:");
+        ImGui::Text("X: %.2f", camera.Position.x);
+        ImGui::Text("Y: %.2f", camera.Position.y);
+        ImGui::Text("Z: %.2f", camera.Position.z);
+        ImGui::NewLine();
+
+        if (ImGui::TreeNode("Settings"))
+        {
+            ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
+            if (wireframeMode == true) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            ImGui::Text("\nVoxel Color:");
+            ImGui::SliderFloat("R", &v_red, 0.0f, 1.0f);
+            ImGui::SliderFloat("G", &v_green, 0.0f, 1.0f);
+            ImGui::SliderFloat("B", &v_blue, 0.0f, 1.0f);
+            ImGui::TreePop();
+            ImGui::Spacing();
+        }
+        ImGui::End();
 }
