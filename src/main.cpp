@@ -225,7 +225,7 @@ int main() {
         game_clock.Update();
         processInput(window);
 
-        glClearColor(0.7f, 0.7f, 1.0f, 1.0f); // Darker background
+        glClearColor(0.7f, 0.7f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -266,15 +266,6 @@ int main() {
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-
-
-        // Example of using AddVoxel and DrawVoxel (old system, may not be what you want for chunks)
-        // if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        //     voxel.AddVoxel(camera.Position.x, camera.Position.y, camera.Position.z, game_clock);
-        // }
-        // If you were to use DrawVoxel, you'd bind a VAO for a single cube first
-        // e.g. glBindVertexArray(someSingleCubeVAO); // This VAO would need pos and normal attribs
-        // voxel.DrawVoxel(voxel.GetVoxelsGenerated(), lightingShader);
 
         updateImGui();
         ImGui::Render();
