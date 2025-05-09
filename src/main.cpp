@@ -34,14 +34,14 @@ float v_green = 1.0f;
 float v_blue = 1.0f;
 
 // Camera
-Camera camera(glm::vec3(CHUNK_SIZE / 2, CHUNK_SIZE + 10.0f, CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
+Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE + 10.0f, Voxel::CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float viewDistance = 500.0f;
 
 // Lighting
-glm::vec3 lightPos(CHUNK_SIZE / 2.0f, CHUNK_SIZE * 1.5f, CHUNK_SIZE / 2.0f + 5.0f); // Position light relative to chunk
+glm::vec3 lightPos(Voxel::CHUNK_SIZE / 2.0f, Voxel::CHUNK_SIZE * 1.5f, Voxel::CHUNK_SIZE / 2.0f + 5.0f); // Position light relative to chunk
 
 // Initialize clock
 Clock game_clock;
@@ -213,7 +213,7 @@ int main() {
     Voxel::OpenGLMesh test_mesh = voxel.GenerateChunkMesh(test_chunk);
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
-    if (test_mesh.vertex_data.size() > 0 && test_mesh.indices.size() > 0) {
+    if (test_mesh.vertices.size() > 0 && test_mesh.indices.size() > 0) {
         voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
     } else {
         std::cout << "Warning: Test chunk mesh is empty. Nothing to render for the chunk." << std::endl;

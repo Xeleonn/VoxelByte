@@ -3,69 +3,61 @@
 
 #include <glm/glm.hpp>
 #include <vector>
-#include <glad/glad.h> // For GLuint
-#include "shader.h" // Assuming Shader class is used (it was in main.cpp)
-#include "clock.h"  // For AddVoxel method, keep as is
+#include <glad/glad.h>
 
-#define CHUNK_SIZE 128 // Define chunk size
+class Voxel
+{
+    public:
+        Voxel();
 
-class Voxel {
-public:
-    Voxel();
-    int last_x, last_z;
-    int chunk_count;
+        static const int CHUNK_SIZE = 128;
 
-    // Structure for voxel data within a chunk
-    struct VoxelData {
-        unsigned char id;
-        unsigned char properties; // e.g., 0 for air, 1 for solid (generic), 2 for meshable solid
-        unsigned char light_level;
-    };
+        enum VoxelProperties : unsigned char
+        {
+            VoxelProperties_Null        = 0,
+            VoxelProperties_Solid       = 1 << 0,
+            VoxelProperties_Foliage     = 1 << 1,
+            VoxelProperties_Water       = 1 << 2,
+            VoxelProperties_Glass       = 1 << 3,
+            VoxelProperties_Light       = 1 << 4,
+            VoxelProperties_Usable      = 1 << 5,
+            VoxelProperties_Unused5     = 1 << 6,
+            VoxelProperties_Unused6     = 1 << 7,
+        };
 
-    // Structure for a chunk
-    struct Chunk {
-        int origin_x = 5, origin_y = 2, origin_z = 14;
-        std::vector<VoxelData> voxel_grid_data;
-        int dim_x, dim_y, dim_z;
+        struct VoxelData
+        {
+            unsigned char voxel_id;
+            unsigned char properties;
+            unsigned char light_level;
+        };
 
-        Chunk(int x = CHUNK_SIZE, int y = CHUNK_SIZE, int z = CHUNK_SIZE) : dim_x(x), dim_y(y), dim_z(z) {
-            voxel_grid_data.resize(static_cast<size_t>(dim_x) * dim_y * dim_z);
-        }
+        struct Chunk
+        {
+            int origin_x = 0, origin_y = 0, origin_z = 0;
+            std::vector<VoxelData> voxel_array;
 
-        // Helper to access elements like a 3D array (const version)
-        const VoxelData& getVoxel(int x, int y, int z) const {
-            return voxel_grid_data[static_cast<size_t>(z) * dim_y * dim_x + static_cast<size_t>(y) * dim_x + x];
-        }
+            Chunk();
+            VoxelData& GetVoxel(int pos_x, int pos_y, int pos_z);
+        };
 
-        // Helper to access elements like a 3D array (non-const version)
-        VoxelData& getVoxel(int x, int y, int z) {
-            return voxel_grid_data[static_cast<size_t>(z) * dim_y * dim_x + static_cast<size_t>(y) * dim_x + x];
-        }
-    };
+        struct OpenGLMesh
+        {
+            std::vector<float> vertices;
+            std::vector<unsigned int> indices;
 
-    // Structure for OpenGL mesh data
-    struct OpenGLMesh {
-        std::vector<float> vertex_data; // Interleaved: x,y,z,nx,ny,nz
-        std::vector<unsigned int> indices;
+            int AddVertex(float x, float y, float z);
+            void AddIndex(int v0, int v1, int v2);
+        };
 
-        // Adds a vertex with position and normal, returns its index
-        int AddVertex(float x, float y, float z, float nx, float ny, float nz);
-        // Adds three indices to form a triangle
-        void AddIndex(int v0, int v1, int v2);
-    };
+        Chunk GenerateTestChunk();
+        OpenGLMesh GenerateChunkMesh(Chunk chunk);
 
-    void AddVoxel(float x, float y, float z, Clock clock);
+        void SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+        void RenderMesh(OpenGLMesh mesh, GLuint VAO);
+        void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
 
-    Chunk GenerateTestChunk();
-    OpenGLMesh GenerateChunkMesh(Chunk chunk);
-
-    // OpenGL resource management for meshes
-    // Pass VBO, EBO, VAO by reference to modify the originals in main
-    void SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-    void RenderMesh(OpenGLMesh mesh, GLuint VAO); // VAO is just an ID here
-    void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-
-private:
+    private:
 };
 
-#endif // VOXEL_H
+#endif
