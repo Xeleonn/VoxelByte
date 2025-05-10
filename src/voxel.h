@@ -47,7 +47,7 @@ class Voxel
 
             Chunk();
             VoxelData& GetVoxel(int pos_x, int pos_y, int pos_z);
-            VoxelColor& GetColor(VoxelData voxel);
+            VoxelColor GetColor(VoxelData voxel);
         };
 
         struct OpenGLMesh
@@ -55,7 +55,7 @@ class Voxel
             std::vector<float> vertices;
             std::vector<unsigned int> indices;
 
-            int AddVertex(float x, float y, float z);
+            int AddVertex(float x, float y, float z, float r, float g, float b);
             void AddIndex(int v0, int v1, int v2);
         };
 

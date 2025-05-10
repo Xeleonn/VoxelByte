@@ -28,20 +28,12 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 bool wireframeMode = false;
 
-// Voxel color values
-float v_red = 1.0f;
-float v_green = 1.0f;
-float v_blue = 1.0f;
-
 // Camera
 Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE + 10.0f, Voxel::CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float viewDistance = 500.0f;
-
-// Lighting
-glm::vec3 lightPos(Voxel::CHUNK_SIZE / 2.0f, Voxel::CHUNK_SIZE * 1.5f, Voxel::CHUNK_SIZE / 2.0f + 5.0f); // Position light relative to chunk
 
 // Initialize clock
 Clock game_clock;
@@ -121,83 +113,39 @@ int main() {
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    const char *vertexLightingShaderSrc =
+    // Vertex shader
+    const char *vertexShaderSource
+    {
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aNormal;\n"
-    "out vec3 FragPos;\n"
-    "out vec3 Normal;\n"
+    "layout (location = 1) in vec3 aColor;\n"
+    "out vec3 ourColor;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "void main() {\n"
-    "    FragPos = vec3(model * vec4(aPos, 1.0));\n"
-    "    Normal = mat3(transpose(inverse(model))) * aNormal;\n"
-    "    gl_Position = projection * view * vec4(FragPos, 1.0);\n"
-    "}\n";
+    "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+    "   ourColor = aColor;\n"
+    "}\0"
+    };
 
-    const char *fragmentLightingShaderSrc =
+    // Fragment shader
+    const char *fragmentShaderSource
+    {
     "#version 330 core\n"
     "out vec4 FragColor;\n"
-    "in vec3 Normal;\n"
-    "in vec3 FragPos;\n"
-    "uniform vec3 lightPos;\n"
-    "uniform vec3 viewPos;\n"
-    "uniform vec3 lightColor;\n"
-    "uniform vec3 objectColor;\n"
+    "in vec3 ourColor;\n"
     "void main() {\n"
-    "    float ambientStrength = 0.2;\n"
-    "    vec3 ambient = ambientStrength * lightColor;\n"
-    "    vec3 norm = normalize(Normal);\n"
-    "    vec3 lightDir = normalize(lightPos - FragPos);\n"
-    "    float diff = max(dot(norm, lightDir), 0.0);\n"
-    "    vec3 diffuse = diff * lightColor;\n"
-    "    float specularStrength = 0.5;\n"
-    "    vec3 viewDir = normalize(viewPos - FragPos);\n"
-    "    vec3 reflectDir = reflect(-lightDir, norm);\n"
-    "    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
-    "    vec3 specular = specularStrength * spec * lightColor;\n"
-    "    vec3 result = (ambient + diffuse + specular) * objectColor;\n"
-    "    FragColor = vec4(result, 1.0);\n"
-    "}\n";
-
-    const char *vertexLightCubeShaderSrc =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    "void main() {\n"
-    "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-    "}\n";
-
-    const char *fragmentLightCubeShaderSrc =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "    FragColor = vec4(1.0); // White light source\n"
-    "}\n";
+    "   FragColor = vec4(ourColor, 1.0f);\n"
+    "}\n\0"
+    };
 
     glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE); // Optional: enable face culling if confident in winding order
     // glCullFace(GL_BACK);
 
-    Shader lightingShader(vertexLightingShaderSrc, fragmentLightingShaderSrc);
-    Shader lightCubeShader(vertexLightCubeShaderSrc, fragmentLightCubeShaderSrc);
+    Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
-    // Setup for the light cube (lamp) VAO
-    unsigned int lightCubeVBO, lightCubeVAO;
-    glGenVertexArrays(1, &lightCubeVAO);
-    glGenBuffers(1, &lightCubeVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(light_cube_vertices), light_cube_vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(lightCubeVAO);
-    // Position attribute for light cube
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -232,40 +180,23 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // View/projection transformations (common to both shaders)
+        ourShader.use();
+
+        // Pass projection matrix to shader
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, viewDistance);
+        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+        // Camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
-
-        // Render the chunk
-        if (chunkVAO != 0) { // Only render if VAO was successfully created
-            lightingShader.use();
-            lightingShader.setVec3("objectColor", v_red, v_green, v_blue);
-            lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-            lightingShader.setVec3("lightPos", lightPos);
-            lightingShader.setVec3("viewPos", camera.Position);
-            lightingShader.setMat4("projection", projection);
-            lightingShader.setMat4("view", view);
-
-            glm::mat4 model = glm::mat4(1.0f); // Chunk is at origin (0,0,0) in its local space
-            // If chunk.origin_x,y,z are to be used for world position, translate here:
-            // model = glm::translate(model, glm::vec3(test_chunk.origin_x, test_chunk.origin_y, test_chunk.origin_z));
-            lightingShader.setMat4("model", model);
+        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        
+        glm::mat4 model = glm::mat4(1.0f);
+        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             
-            voxel.RenderMesh(test_mesh, chunkVAO);
-        }
-
-        // Render the light cube (lamp)
-        lightCubeShader.use();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
-        glm::mat4 modelLamp = glm::mat4(1.0f);
-        modelLamp = glm::translate(modelLamp, lightPos);
-        modelLamp = glm::scale(modelLamp, glm::vec3(0.2f));
-        lightCubeShader.setMat4("model", modelLamp);
-
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
+        voxel.RenderMesh(test_mesh, chunkVAO);
 
         updateImGui();
         ImGui::Render();
@@ -279,8 +210,6 @@ int main() {
     if (chunkVAO != 0) {
         voxel.FreeRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
     }
-    glDeleteVertexArrays(1, &lightCubeVAO);
-    glDeleteBuffers(1, &lightCubeVBO);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -377,8 +306,6 @@ void updateImGui() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         ImGui::Separator();
-        ImGui::Text("Chunk Color (Lighting):");
-        ImGui::ColorEdit3("Color", &v_red);
         ImGui::Spacing();
     }
     ImGui::End();
