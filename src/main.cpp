@@ -27,6 +27,7 @@ void updateImGui();
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 bool wireframeMode = false;
+bool gravity = false;
 
 // Camera
 Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE + 10.0f, Voxel::CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
@@ -236,6 +237,8 @@ void processInput(GLFWwindow *window) {
 
     // Camera movement
     float deltaTime = game_clock.GetDeltaTime();
+    if (gravity)
+        camera.ProcessGravity(true, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -306,6 +309,7 @@ void updateImGui() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         ImGui::Separator();
+        ImGui::Checkbox("Gravity", &gravity);
         ImGui::Spacing();
     }
     ImGui::End();

@@ -116,6 +116,14 @@ public:
             Zoom = 45.0f;
     }
 
+    // Processes gravity if set to true
+    void ProcessGravity(bool choice, float deltaTime)
+    {
+        float gravity = MovementSpeed * deltaTime;
+        if (choice)
+            Position -= WorldUp * gravity;
+    }
+
 private:
     // Calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
