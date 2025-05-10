@@ -32,13 +32,22 @@ class Voxel
             unsigned char light_level;
         };
 
+        struct VoxelColor
+        {
+            float r;
+            float g;
+            float b;
+        };
+
         struct Chunk
         {
             int origin_x = 0, origin_y = 0, origin_z = 0;
             std::vector<VoxelData> voxel_array;
+            float color[3];
 
             Chunk();
             VoxelData& GetVoxel(int pos_x, int pos_y, int pos_z);
+            VoxelColor& GetColor(VoxelData voxel);
         };
 
         struct OpenGLMesh
@@ -56,6 +65,8 @@ class Voxel
         void SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
         void RenderMesh(OpenGLMesh mesh, GLuint VAO);
         void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+        float GetVoxelColor(VoxelData voxel_id);
+        static const float voxel_colors[256][3];
 
     private:
 };
