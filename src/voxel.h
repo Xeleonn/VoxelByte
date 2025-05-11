@@ -66,6 +66,7 @@ class Voxel
         void RenderMesh(OpenGLMesh mesh, GLuint VAO);
         void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
         float GetVoxelColor(VoxelData voxel_id);
+        int ColorHeight(int y, int chunk_size);
         static const float voxel_colors[256][3];
 
     private:

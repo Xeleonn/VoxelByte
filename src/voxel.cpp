@@ -28,6 +28,19 @@ Voxel::VoxelColor Voxel::Chunk::GetColor(Voxel::VoxelData voxel)
     return color_obj; // Return by value (a copy is made)
 }
 
+int Voxel::ColorHeight(int y, int chunk_size)
+{
+    if (y == chunk_size - 1)
+        return 105; // Green
+    if (y >= chunk_size - 30 && y < chunk_size - 1)
+        return 20;
+    if (y <= chunk_size - 31)
+        return 220;
+    else {
+        return 255;
+    }
+}
+
 
 Voxel::Chunk Voxel::GenerateTestChunk()
 {
@@ -44,7 +57,7 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Voxel::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                vd = {static_cast<unsigned char>(y), VoxelProperties_Solid, 0};
+                vd = {static_cast<unsigned char>(ColorHeight(y, CHUNK_SIZE)), VoxelProperties_Solid, 0};
                 //else vd = {0, VoxelProperties_Null, 0};
                 new_chunk.GetVoxel(x, y, z) = vd;
                 float r = voxel_colors[vd.voxel_id][0];
