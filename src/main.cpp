@@ -20,8 +20,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-
 void updateImGui();
+
+// Initialize clock
+Clock game_clock;
+
+// Initialize voxel system
+Voxel voxel;
 
 // Settings
 const unsigned int SCR_WIDTH = 1280;
@@ -36,12 +41,6 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float viewDistance = 500.0f;
 
-// Initialize clock
-Clock game_clock;
-
-// Initialize voxel system
-Voxel voxel;
-
 int main() {
     // GLFW: Initialize and configure
     glfwInit();
@@ -51,68 +50,23 @@ int main() {
 
     // GLFW window creation
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "VoxelByte", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-    
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // GLAD: Load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
-    float light_cube_vertices[] = {
-        // positions          // normals
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-    };
+    // Initialize ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+    io.IniFilename = nullptr;
 
     // Vertex shader
     const char *vertexShaderSource
@@ -147,27 +101,12 @@ int main() {
 
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
-
-    // Initialize ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-    io.IniFilename = nullptr;
-
     // Test chunk generation and mesh setup
     Voxel::Chunk test_chunk = voxel.GenerateTestChunk();
     Voxel::OpenGLMesh test_mesh = voxel.GenerateChunkMesh(test_chunk);
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
-    if (test_mesh.vertices.size() > 0 && test_mesh.indices.size() > 0) {
-        voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
-    } else {
-        std::cout << "Warning: Test chunk mesh is empty. Nothing to render for the chunk." << std::endl;
-    }
-    
+    voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -258,7 +197,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    // Only process mouse if cursor is disabled (i.e., not in ImGui interaction mode)
+    // Only process mouse if cursor is disabled
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
         float xpos = static_cast<float>(xposIn);
         float ypos = static_cast<float>(yposIn);
