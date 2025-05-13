@@ -102,63 +102,67 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk)
                     VoxelData current_voxel_data = chunk.GetVoxel(x, y, z);
                     VoxelColor voxel_color = chunk.GetColor(current_voxel_data);
 
+                    int ocx = chunk.origin_x + x;
+                    int ocy = chunk.origin_y + y;
+                    int ocz = chunk.origin_z + z;
+
                     // add triangles to top
                     if ((y + 1  == CHUNK_SIZE) || ((chunk.GetVoxel(x, y + 1, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to bottom
                     if ((y == 0) || ((chunk.GetVoxel(x, y - 1, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to right
                     if ((x + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x + 1, y, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to left
                     if ((x == 0) || ((chunk.GetVoxel(x - 1, y, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to back
                     if ((z + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x, y, z + 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)x, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)x, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to front
                     if ((z == 0) || ((chunk.GetVoxel(x, y, z - 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)y, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)y + 1, (float)z, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)x, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)x, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
