@@ -50,7 +50,7 @@ class Voxel
             VoxelColor GetColor(VoxelData voxel);
         };
 
-        struct OpenGLMesh
+        struct VoxelMesh
         {
             std::vector<float> vertices;
             std::vector<unsigned int> indices;
@@ -60,11 +60,11 @@ class Voxel
         };
 
         Chunk GenerateTestChunk();
-        OpenGLMesh GenerateChunkMesh(Chunk chunk);
+        VoxelMesh GenerateChunkMesh(Chunk chunk);
 
-        void SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-        void RenderMesh(OpenGLMesh mesh, GLuint VAO);
-        void FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+        void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+        void RenderMesh(VoxelMesh mesh, GLuint VAO);
+        void FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
         float GetVoxelColor(VoxelData voxel_id);
         int ColorHeight(int y, int chunk_size);
         static const float voxel_colors[256][3];
