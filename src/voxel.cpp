@@ -70,7 +70,7 @@ Voxel::Chunk Voxel::GenerateTestChunk()
     return new_chunk;
 }
 
-int Voxel::OpenGLMesh::AddVertex(float x, float y, float z, float r, float g, float b)
+int Voxel::VoxelMesh::AddVertex(float x, float y, float z, float r, float g, float b)
 {
     vertices.push_back(x);
     vertices.push_back(y);
@@ -81,15 +81,15 @@ int Voxel::OpenGLMesh::AddVertex(float x, float y, float z, float r, float g, fl
     return (vertices.size() / 6) - 1;
 }
 
-void Voxel::OpenGLMesh::AddIndex(int v0, int v1, int v2) {
+void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
     indices.push_back(v0);
     indices.push_back(v1);
     indices.push_back(v2);
 }
 
-Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk)
+Voxel::VoxelMesh Voxel::GenerateChunkMesh(Chunk chunk)
 {
-    OpenGLMesh chunk_mesh;
+    VoxelMesh chunk_mesh;
 
     for (int x = 0; x < CHUNK_SIZE; x++)
     {
@@ -149,20 +149,20 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk)
                     // add triangles to back
                     if ((z + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x, y, z + 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
                     // add triangles to front
                     if ((z == 0) || ((chunk.GetVoxel(x, y, z - 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
                     {
-                        int v0 = chunk_mesh.AddVertex((float)x, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)x + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)x + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)x, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
+                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v0, v2, v3);
                     }
@@ -173,7 +173,7 @@ Voxel::OpenGLMesh Voxel::GenerateChunkMesh(Chunk chunk)
     return chunk_mesh;
 }
 
-void Voxel::SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
+void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
 {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -194,14 +194,14 @@ void Voxel::SetupRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& V
     glEnableVertexAttribArray(1);
 }
 
-void Voxel::RenderMesh(OpenGLMesh mesh, GLuint VAO)
+void Voxel::RenderMesh(VoxelMesh mesh, GLuint VAO)
 {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
-void Voxel::FreeRenderMesh(OpenGLMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
+void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
