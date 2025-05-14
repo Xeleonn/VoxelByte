@@ -173,6 +173,135 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh(Chunk chunk)
     return chunk_mesh;
 }
 
+Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
+{
+    VoxelMesh chunk_mesh;
+    // Sweep over each axis (X, Y and Z)
+    for (int d = 0; d < 3; d++)
+    {
+        int i = 0, j = 0, k = 0, l = 0, w = 0, h = 0;
+        int u = (d + 1) % 3;
+        int v = (d + 2) % 3;
+        int *x = new int[3]{0};
+        int *q = new int[3]{0};
+
+        bool *mask = new bool[CHUNK_SIZE * CHUNK_SIZE]{false};
+        q[d] = 1;
+
+        // Check each slice of the chunk one at a time
+        for (x[d] = -1; x[d] < CHUNK_SIZE;)
+        {
+            // Compute the mask
+            int n = 0;
+            for (x[v] = 0; x[v] < CHUNK_SIZE; x[v]++)
+            {
+                for (x[u] = 0; x[u] < CHUNK_SIZE; x[u]++)
+                {                    
+                    // q determines the direction (X, Y or Z) that we are searching
+                    // m.IsBlockAt(x,y,z) takes global map positions and returns true if a block exists there
+                    
+
+                    bool block_current;
+                    bool block_compare;
+
+                    if (0 <= x[d])
+                        block_current = !(chunk.GetVoxel(x[0], x[1], x[2]).properties & VoxelProperties::VoxelProperties_Solid);
+                    else
+                        block_current = true;
+
+                    if (x[d] < (CHUNK_SIZE - 1))
+                        block_compare = !(chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).properties & VoxelProperties::VoxelProperties_Solid);
+                    else
+                        block_compare = true;
+                    
+
+                    // The mask is set to true if there is a visible face between two blocks,
+                    //   i.e. both aren't empty and both aren't blocks
+                    mask[n] = (block_current != block_compare);
+                    n += 1;
+                }
+            }
+
+            x[d]++;
+
+            n = 0;
+            
+            // Generate a mesh from the mask using lexicographic ordering,      
+            //   by looping over each block in this slice of the chunk
+            for (j = 0; j < CHUNK_SIZE; j++)
+            {
+                for (i = 0; i < CHUNK_SIZE;)
+                {
+                    if (mask[n])
+                    {
+                        // Compute the width of this quad and store it in w                        
+                        //   This is done by searching along the current axis until mask[n + w] is false
+                        for (w = 1; ((i + w) < CHUNK_SIZE) && mask[n + w]; w++) { }
+
+                        // Compute the height of this quad and store it in h                        
+                        //   This is done by checking if every block next to this row (range 0 to w) is also part of the mask.
+                        //   For example, if w is 5 we currently have a quad of dimensions 1 x 5. To reduce triangle count,
+                        //   greedy meshing will attempt to expand this quad out to CHUNK_SIZE x 5, but will stop if it reaches a hole in the mask
+                        
+                        bool done = false;
+                        for (h = 1; (j + h) < CHUNK_SIZE; h++)
+                        {
+                            // Check each block next to this quad
+                            for (k = 0; k < w; k++)
+                            {
+                                // If there's a hole in the mask, exit
+                                if (!mask[n + k + h * CHUNK_SIZE])
+                                {
+                                    done = true;
+                                    break;
+                                }
+                            }
+
+                            if (done)
+                                break;
+                        }
+
+                        x[u] = i;
+                        x[v] = j;
+
+                        // du and dv determine the size and orientation of this face
+                        int *du = new int[3]{0};
+                        du[u] = w;
+
+                        int *dv = new int[3]{0};
+                        dv[v] = h;
+
+                        // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
+
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 1.0f, 0.2f, 0.2f);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 1.0f, 0.2f, 0.2f);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]), 1.0f, 0.2f, 0.2f);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 1.0f, 0.2f, 0.2f);
+                        chunk_mesh.AddIndex(v0, v1, v2);
+                        chunk_mesh.AddIndex(v1, v2, v3);
+
+                        // Clear this part of the mask, so we don't add duplicate faces
+                        for (l = 0; l < h; l++)
+                            for (k = 0; k < w; k++)
+                                mask[n + k + l * CHUNK_SIZE] = false;
+
+                        // Increment counters and continue
+                        i += w;
+                        n += w;
+                    }
+                    else
+                    {
+                        i++;
+                        n++;
+                    }
+                }
+            }
+        }
+    }
+
+    return chunk_mesh;
+}
+
 void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
 {
     glGenVertexArrays(1, &VAO);
