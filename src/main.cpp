@@ -32,7 +32,9 @@ Voxel voxel;
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 bool wireframeMode = false;
-bool gravity = false;
+float clearColorR = 0.7f;
+float clearColorG = 0.7f;
+float clearColorB = 1.0f;
 
 // Camera
 Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE + 10.0f, Voxel::CHUNK_SIZE * 1.5f + 5.0f)); // Position camera to view the chunk
@@ -113,7 +115,7 @@ int main() {
         game_clock.Update();
         processInput(window);
 
-        glClearColor(0.7f, 0.7f, 1.0f, 1.0f);
+        glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -176,8 +178,6 @@ void processInput(GLFWwindow *window) {
 
     // Camera movement
     float deltaTime = game_clock.GetDeltaTime();
-    if (gravity)
-        camera.ProcessGravity(true, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -248,7 +248,8 @@ void updateImGui() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         ImGui::Separator();
-        ImGui::Checkbox("Gravity", &gravity);
+        ImGui::Text("glClearColor:");
+        ImGui::ColorEdit3("Color", &clearColorR);
         ImGui::Spacing();
     }
     ImGui::End();
