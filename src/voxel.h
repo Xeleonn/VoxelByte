@@ -62,6 +62,7 @@ class Voxel
         Chunk GenerateTestChunk();
         VoxelMesh GenerateChunkMesh(Chunk chunk);
         VoxelMesh GenerateChunkMesh2(Chunk chunk);
+        VoxelMesh GenerateChunkMesh3(Chunk chunk);
 
         void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
         void RenderMesh(VoxelMesh mesh, GLuint VAO);

@@ -57,7 +57,7 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Voxel::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                vd = {static_cast<unsigned char>(ColorHeight(y, CHUNK_SIZE)), VoxelProperties_Solid, 0};
+                vd = {static_cast<unsigned char>(ColorHeight((x + y) / 2, CHUNK_SIZE)), VoxelProperties_Solid, 0};
                 //else vd = {0, VoxelProperties_Null, 0};
                 new_chunk.GetVoxel(x, y, z) = vd;
                 float r = voxel_colors[vd.voxel_id][0];
@@ -185,7 +185,9 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         int *x = new int[3]{0};
         int *q = new int[3]{0};
 
-        bool *mask = new bool[CHUNK_SIZE * CHUNK_SIZE]{false};
+        unsigned char *mask = new unsigned char[CHUNK_SIZE * CHUNK_SIZE]{false};
+        //int *block_ids = new int[CHUNK_SIZE * CHUNK_SIZE]{0x9D};
+        
         q[d] = 1;
 
         // Check each slice of the chunk one at a time
@@ -210,10 +212,11 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                         block_current = true;
 
                     if (x[d] < (CHUNK_SIZE - 1))
+                    {
                         block_compare = !(chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).properties & VoxelProperties::VoxelProperties_Solid);
+                    }
                     else
                         block_compare = true;
-                    
 
                     // The mask is set to true if there is a visible face between two blocks,
                     //   i.e. both aren't empty and both aren't blocks
@@ -236,6 +239,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                     {
                         // Compute the width of this quad and store it in w                        
                         //   This is done by searching along the current axis until mask[n + w] is false
+
                         for (w = 1; ((i + w) < CHUNK_SIZE) && mask[n + w]; w++) { }
 
                         // Compute the height of this quad and store it in h                        
@@ -273,10 +277,12 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 1.0f, 0.2f, 0.2f);
-                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 1.0f, 0.2f, 0.2f);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]), 1.0f, 0.2f, 0.2f);
-                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 1.0f, 0.2f, 0.2f);
+                        //VoxelColor voxel_col = chunk.GetColor(chunk.GetVoxel(x[0], x[1], x[2]));
+
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 0.5f, 0.5f, 0.5f);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 0.5f, 0.5f, 0.5f);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]), 0.5f, 0.5f, 0.5f);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 0.5f, 0.5f, 0.5f);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v1, v2, v3);
 
@@ -299,6 +305,222 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         }
     }
 
+    return chunk_mesh;
+}
+
+Voxel::VoxelMesh Voxel::GenerateChunkMesh3(Chunk chunk)
+{
+    VoxelMesh chunk_mesh;
+
+    const int SOUTH = 0,
+            NORTH = 1,
+            EAST = 2,
+            WEST = 3,
+            TOP = 4,
+            BOTTOM = 5;
+
+    // Cycle through all 3 axis
+    for (int d = 0; d < 3; d++)
+    {
+        bool backFace = false;
+        int u = (d + 1) % 3; // Which axis of the slice to cycle through
+        int v = (d + 2) % 3;
+        int *x = new int[3]{0};
+        int *q = new int[3]{0};
+        int side = 0;
+
+        // Ulong first bytes (0xFFFFFFFF) represent normal and the rest represent its type
+        //var mask = new NativeArray<ulong>(chunkSize[u] * chunkSize[v], Allocator.Temp,
+        //    NativeArrayOptions.UninitializedMemory);
+        unsigned long long *mask = new unsigned long long[CHUNK_SIZE * CHUNK_SIZE]{0};
+        
+        const unsigned long long emptyBlock = (unsigned long long)(1 & 0x3UL) << 32;
+
+        q[d] = 1;
+
+        // Check each slice of the chunk one at a time
+        for (x[d] = -1; x[d] < CHUNK_SIZE;)
+        {
+            // Compute the mask
+            int n = 0;
+            for (x[v] = 0; x[v] < CHUNK_SIZE; ++x[v])
+            {
+                for (x[u] = 0; x[u] < CHUNK_SIZE; ++x[u])
+                {
+                    // q determines the direction (X, Y or Z) that we are searching
+                    int min = 0; //q.y != 0 ? 0 : -1;
+                    int max = CHUNK_SIZE - 1; //q.y != 0 ? chunkSize[d] - 1 : chunkSize[d];
+                    
+                    unsigned char blockCurrent; 
+                    if (x[d] >= min)
+                        blockCurrent = chunk.GetVoxel(x[0], x[1], x[2]).voxel_id;
+                    else
+                        blockCurrent = 0xFF;
+                    int blockCompare;
+
+                    if ((x[d] < max) && (x[d] >= min))
+                        blockCompare = chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).voxel_id;
+                    else if (x[d] == -1) blockCompare = 0x9D;
+                    else
+                        blockCompare = 0xFF;
+
+                    bool bCurrentOpaque = blockCurrent != 0xFF;
+                    bool bCompareOpaque = blockCompare != 0xFF;
+
+                    if (bCurrentOpaque == bCompareOpaque)
+                        mask[n++] = emptyBlock;
+                    else if (bCurrentOpaque)
+                    {
+                        // Set current block normal to 1 (represented by 2)
+                        mask[n] = 0;
+                        mask[n] |= (unsigned long long)(2 & 0x3UL) << 32;
+                        mask[n++] |= (unsigned long long)blockCurrent & 0xFFFFFFFFUL;
+
+                        backFace = false;
+                    }
+                    else
+                    {
+                        // Set compare block normal to -1 (represented by 0)
+                        mask[n] = 0;
+                        mask[n] |= 0; //(0 & 0x3UL) << 32;
+                        mask[n++] |= (unsigned long long)blockCompare & 0xFFFFFFFFUL;
+                        backFace = true;
+                    }
+                }
+            }
+
+            x[d]++;
+
+            n = 0;
+
+            // Generate a mesh from the mask using lexicographic ordering,      
+            // by looping over each face in this slice of the chunk
+            for (int j = 0; j < CHUNK_SIZE; j++)
+            {
+                for (int i = 0; i < CHUNK_SIZE;)
+                {
+                    if (mask[n] != emptyBlock)
+                    {
+                        // Compute the width of this quad and store it in w                        
+                        //   This is done by searching along the current axis until mask[n + w] is false
+                        int w = 1;
+                        int h = 1;
+                        for (; i + w < CHUNK_SIZE && (mask[n + w] == (mask[n])); w++)
+                        {
+                        }
+
+                        // Compute the height of this quad and store it in h                        
+                        //   This is done by checking if every block next to this row (range 0 to w) is also part of the mask.
+                        //   For example, if w is 5 we currently have a quad of dimensions 1 x 5. To reduce triangle count,
+                        //   greedy meshing will attempt to expand this quad out to CHUNK_SIZE x 5, but will stop if it reaches a hole (or different block) in the mask
+
+                        bool done = false;
+                        for (; j + h < CHUNK_SIZE; h++)
+                        {
+                            // Check each block next to this quad
+                            for (int k = 0; k < w; ++k)
+                            {
+                                // If there's a hole in the mask, or it is not equal to the next face, exit
+                                if ( //mask[n + k + h * chunkSize[u]] != emptyBlock &&
+                                    mask[n + k + h * CHUNK_SIZE] == (mask[n])) continue;
+                                done = true;
+                                break;
+                            }
+
+                            if (done)
+                                break;
+                        }
+
+                        x[u] = i;
+                        x[v] = j;
+
+
+                        // du and dv determine the size and orientation of this face
+                        int *du = new int[3]{0};
+                        du[u] = w;
+
+                        int *dv = new int[3]{0};
+                        dv[v] = h;
+
+                        float *blockMinVertex = new float[3]{-0.5f, -0.5f, -0.5f};
+
+                        switch (d)
+                        {
+                            case 0:
+                                if (backFace)
+                                    side = WEST;
+                                else
+                                    side = EAST;
+                                break;
+                            case 1: 
+                                if ((q[1] * (int)((mask[n] >> 32) & 0x3UL) - 1) < 0)
+                                    side = BOTTOM;
+                                else
+                                    side = TOP;
+                                break;
+                            case 2:
+                                if (backFace)
+                                    side = SOUTH;
+                                else
+                                    side = NORTH;
+                                break;
+                            default:
+                                side = 0;
+                                break;
+                        };
+
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 0.5f, 0.5f, 0.5f);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 0.5f, 0.5f, 0.5f);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]), 0.5f, 0.5f, 0.5f);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 0.5f, 0.5f, 0.5f);
+                        chunk_mesh.AddIndex(v0, v1, v2);
+                        chunk_mesh.AddIndex(v1, v2, v3);
+
+                        /*
+                        float3 bottomLeft = blockSize * (float3)x;
+                        float3 topLeft = blockSize * (float3)(x + du);
+                        float3 topRight = blockSize * (float3)(x + du + dv);
+                        float3 bottomRight = blockSize * (float3)(x + dv);
+
+                        CreateQuad(
+                            blockMinVertex + bottomLeft,
+                            blockMinVertex + topLeft,
+                            blockMinVertex + topRight,
+                            blockMinVertex + bottomRight,
+                            w,
+                            h,
+                            new Vector3(q.x, q.y, q.z),
+                            mask[n],
+                            side,
+                            vertexData,
+                            normalData,
+                            uvData,
+                            indexData
+                        );
+                        */
+
+                        // Clear this part of the mask, so we don't add duplicate faces
+                        for (int l = 0; l < h; ++l)
+                        {
+                            for (int k = 0; k < w; ++k)
+                            {
+                                mask[n + k + l * CHUNK_SIZE] = emptyBlock;
+                            }
+                        }
+
+                        // Increment counters by width of the quad and continue
+                        i += w;
+                        n += w;
+                    }
+                    else
+                    {
+                        i++;
+                        n++;
+                    }
+                }
+            }
+        }
+    }
     return chunk_mesh;
 }
 
