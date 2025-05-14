@@ -356,11 +356,12 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh3(Chunk chunk)
                         blockCurrent = chunk.GetVoxel(x[0], x[1], x[2]).voxel_id;
                     else
                         blockCurrent = 0xFF;
-                    int blockCompare;
+                    unsigned char blockCompare;
 
                     if ((x[d] < max) && (x[d] >= min))
                         blockCompare = chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).voxel_id;
-                    else if (x[d] == -1) blockCompare = 0x9D;
+                    else if (x[d] == -1)
+                        blockCompare = 0x9D;
                     else
                         blockCompare = 0xFF;
 
