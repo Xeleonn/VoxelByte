@@ -57,6 +57,7 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSwapInterval( 0 );
 
     // GLAD: Load all OpenGL function pointers
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -105,7 +106,7 @@ int main() {
 
     // Test chunk generation and mesh setup
     Voxel::Chunk test_chunk = voxel.GenerateTestChunk();
-    Voxel::OpenGLMesh test_mesh = voxel.GenerateChunkMesh(test_chunk);
+    Voxel::VoxelMesh test_mesh = voxel.GenerateChunkMesh2(test_chunk);
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
     voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
