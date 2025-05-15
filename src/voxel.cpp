@@ -16,6 +16,13 @@ Voxel::Chunk::Chunk()
 
 Voxel::VoxelData& Voxel::Chunk::GetVoxel(int pos_x, int pos_y, int pos_z)
 {
+    bool underflow = ((pos_x < 0) || (pos_y < 0) || (pos_z < 0));
+    bool overflow = ((pos_x >= CHUNK_SIZE) || (pos_y >= CHUNK_SIZE) || (pos_z >= CHUNK_SIZE));
+    if (underflow || overflow)
+    {
+        VoxelData vd{0, VoxelProperties::VoxelProperties_Null, 0};
+        return vd;
+    }
     return voxel_array[pos_z * CHUNK_SIZE * CHUNK_SIZE + pos_y * CHUNK_SIZE + pos_x];
 }
 
@@ -57,8 +64,8 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Voxel::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                vd = {static_cast<unsigned char>(ColorHeight((x + y) / 2, CHUNK_SIZE)), VoxelProperties_Solid, 0};
-                //else vd = {0, VoxelProperties_Null, 0};
+                if ((z % 8 == 0) || (y % 8 == 0)) vd = {static_cast<unsigned char>(ColorHeight((x + y) / 2, CHUNK_SIZE)), VoxelProperties_Solid, 0};
+                else vd = {0xFF, VoxelProperties_Null, 0};
                 new_chunk.GetVoxel(x, y, z) = vd;
                 float r = voxel_colors[vd.voxel_id][0];
                 float g = voxel_colors[vd.voxel_id][1];
@@ -358,10 +365,8 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh3(Chunk chunk)
                         blockCurrent = 0xFF;
                     unsigned char blockCompare;
 
-                    if ((x[d] < max) && (x[d] >= min))
+                    if (x[d] < max)
                         blockCompare = chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).voxel_id;
-                    else if (x[d] == -1)
-                        blockCompare = 0x9D;
                     else
                         blockCompare = 0xFF;
 
@@ -470,9 +475,11 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh3(Chunk chunk)
                                 break;
                         };
 
+                        //VoxelColor voxel_col = chunk.GetColor(chunk.GetVoxel(x[0], x[1], x[2]));
+
                         int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 0.5f, 0.5f, 0.5f);
                         int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 0.5f, 0.5f, 0.5f);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]), 0.5f, 0.5f, 0.5f);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]),  0.5f, 0.5f, 0.5f);
                         int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 0.5f, 0.5f, 0.5f);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v1, v2, v3);
