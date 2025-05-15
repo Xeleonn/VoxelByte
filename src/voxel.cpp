@@ -477,10 +477,13 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh3(Chunk chunk)
 
                         //VoxelColor voxel_col = chunk.GetColor(chunk.GetVoxel(x[0], x[1], x[2]));
 
-                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), 0.5f, 0.5f, 0.5f);
-                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), 0.5f, 0.5f, 0.5f);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]),  0.5f, 0.5f, 0.5f);
-                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), 0.5f, 0.5f, 0.5f);
+                        unsigned char voxel_id = (unsigned char)(mask[n]);
+                        VoxelColor voxel_col = {voxel_colors[voxel_id][0], voxel_colors[voxel_id][1], voxel_colors[voxel_id][2]};
+
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]),                    (float)(x[1]),                  (float)(x[2]), voxel_col.r, voxel_col.g, voxel_col.b);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]),            (float)(x[1] + du[1]),          (float)(x[2] + du[2]), voxel_col.r, voxel_col.g, voxel_col.b);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]),            (float)(x[1] + dv[1]),          (float)(x[2] + dv[2]),  voxel_col.r, voxel_col.g, voxel_col.b);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]),    (float)(x[1] + du[1] + dv[1]),  (float)(x[2] + du[2] + dv[2]), voxel_col.r, voxel_col.g, voxel_col.b);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v1, v2, v3);
 
