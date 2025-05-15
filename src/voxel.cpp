@@ -30,9 +30,9 @@ Voxel::VoxelData& Voxel::Chunk::GetVoxel(int pos_x, int pos_y, int pos_z)
 Voxel::VoxelColor Voxel::Chunk::GetColor(Voxel::VoxelData voxel)
 {
     int id = voxel.voxel_id;
-    Voxel::VoxelColor color_obj; // Renamed for clarity, still local
+    Voxel::VoxelColor color_obj;
     color_obj = {voxel_colors[id][0], voxel_colors[id][1], voxel_colors[id][2]};
-    return color_obj; // Return by value (a copy is made)
+    return color_obj;
 }
 
 int Voxel::ColorHeight(int y, int chunk_size)
