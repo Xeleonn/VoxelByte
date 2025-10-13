@@ -1,0 +1,6 @@
+﻿  main.cpp
+G:\dev\repos\VoxelByte\VoxelByte\shader.h(33,22): warning C4101: 'geometry': unreferenced local variable
+  (compiling source file 'main.cpp')
+  
+G:\dev\repos\VoxelByte\VoxelByte\main.cpp(185,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Debug\VoxelByte.exe
