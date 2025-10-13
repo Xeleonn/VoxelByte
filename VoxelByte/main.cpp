@@ -32,9 +32,7 @@ Voxel voxel;
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 bool wireframeMode = false;
-float clearColorR = 0.7f;
-float clearColorG = 0.7f;
-float clearColorB = 1.0f;
+float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 
 // Camera
 Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f)); // Position camera to view the chunk
@@ -117,7 +115,7 @@ int main() {
         game_clock.Update();
         processInput(window);
 
-        glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
+        glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -233,7 +231,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void updateImGui() {
-    ImGui::SetNextWindowSize(ImVec2(250, 300));
+    ImGui::SetNextWindowSize(ImVec2(305, 300));
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     ImGui::Text("Time: %.2f s", game_clock.GetTime());
@@ -260,7 +258,7 @@ void updateImGui() {
         ImGui::SliderFloat("View Distance", &viewDistance, 100.0f, 10000.0f);
         ImGui::Separator();
         ImGui::Text("glClearColor:");
-        ImGui::ColorEdit3("Color", &clearColorR);
+        ImGui::ColorEdit3("Color", clearColor);
         ImGui::Spacing();
     }
     ImGui::End();
