@@ -50,8 +50,7 @@
               "RelativeToolTip": "VoxelByte\\voxel.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-10-12T03:37:42.837Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T03:37:42.837Z"
             },
             {
               "$type": "Document",
@@ -63,8 +62,7 @@
               "RelativeToolTip": "VoxelByte\\shader.h",
               "ViewState": "AgIAAGMAAAAAAAAAAAAAwIcAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-10-12T03:37:30.758Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T03:37:30.758Z"
             },
             {
               "$type": "Document",
@@ -88,8 +86,7 @@
               "RelativeToolTip": "VoxelByte\\camera.h",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAABIAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-10-12T03:37:03.429Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T03:37:03.429Z"
             },
             {
               "$type": "Document",
@@ -101,8 +98,7 @@
               "RelativeToolTip": "VoxelByte\\voxel.cpp",
               "ViewState": "AgIAAGIBAAAAAAAAAAAAAEAAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-12T03:36:18.234Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T03:36:18.234Z"
             },
             {
               "$type": "Document",
@@ -114,8 +110,7 @@
               "RelativeToolTip": "VoxelByte\\clock.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAwCQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-12T03:35:39.967Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-12T03:35:39.967Z"
             },
             {
               "$type": "Document",
@@ -125,7 +120,7 @@
               "RelativeDocumentMoniker": "VoxelByte\\main.cpp",
               "ToolTip": "G:\\dev\\repos\\VoxelByte\\VoxelByte\\main.cpp",
               "RelativeToolTip": "VoxelByte\\main.cpp",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAiwCcAAABoAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAACcAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-10-12T03:15:38.337Z",
               "EditorCaption": ""

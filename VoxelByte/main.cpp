@@ -37,7 +37,7 @@ float clearColorG = 0.7f;
 float clearColorB = 1.0f;
 
 // Camera
-Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE + 10.0f, Voxel::CHUNK_SIZE * 1.5f + 100.0f)); // Position camera to view the chunk
+Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f)); // Position camera to view the chunk
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
