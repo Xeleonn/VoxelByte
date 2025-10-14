@@ -7,6 +7,7 @@
 
 Voxel::Voxel()
 {
+    m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
 Voxel::Chunk::Chunk()
@@ -43,11 +44,21 @@ int Voxel::ColorHeight(int y, int chunk_size)
 
 Voxel::Chunk Voxel::GenerateTestChunk()
 {
+    std::vector<float> noise_data(128 * 128);
 
     Chunk new_chunk;
     new_chunk.origin_x = 0;
     new_chunk.origin_y = 0;
     new_chunk.origin_z = 0;
+
+    size_t noise_idx = 0;
+    for (int x = 0; x < Voxel::CHUNK_SIZE; x++)
+    {
+        for (int y = 0; y < Voxel::CHUNK_SIZE; y++)
+        {
+            noise_data[noise_idx++] = m_noise.GetNoise((float)x, (float)y);
+        }
+    }
 
     for (int x = 0; x < Voxel::CHUNK_SIZE; x++)
     {
@@ -56,8 +67,11 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Voxel::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                vd = { static_cast<unsigned char>(ColorHeight(y, CHUNK_SIZE)), VoxelProperties_Solid, 0 };
-                //else vd = {0, VoxelProperties_Null, 0};
+                if (noise_data[x * Voxel::CHUNK_SIZE + z] * 256.0f > y)
+                    vd = {215, VoxelProperties_Solid, 0 };
+                else
+                    vd = {0, VoxelProperties_Null, 0};
+
                 new_chunk.GetVoxel(x, y, z) = vd;
                 float r = voxel_colors[vd.voxel_id][0];
                 float g = voxel_colors[vd.voxel_id][1];
@@ -272,10 +286,10 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunk_mesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), 1.0f, 0.2f, 0.2f);
-                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), 1.0f, 0.2f, 0.2f);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), 1.0f, 0.2f, 0.2f);
-                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), 1.0f, 0.2f, 0.2f);
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), 0.2f, 0.3f, 0.2f);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), 0.2f, 0.3f, 0.2f);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), 0.2f, 0.3f, 0.2f);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), 0.2f, 0.3f, 0.2f);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v1, v2, v3);
 

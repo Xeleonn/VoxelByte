@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <glad/glad.h>
+#include "../include/FastNoiseLite/FastNoiseLite.h"
 
 class Voxel
 {
@@ -71,6 +72,7 @@ public:
     static const float voxel_colors[256][3];
 
 private:
+    FastNoiseLite m_noise;
 };
 
 #endif
