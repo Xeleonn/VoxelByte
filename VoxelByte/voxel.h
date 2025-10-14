@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <glad/glad.h>
+#include <string>
+#include <unordered_map>
 #include "../include/FastNoiseLite/FastNoiseLite.h"
 
 class Voxel
@@ -12,6 +14,24 @@ public:
     Voxel();
 
     static const int CHUNK_SIZE = 128;
+
+    uint8_t voxelId = 1;
+
+    struct VoxelDataNew
+    {
+        std::string name;
+        bool isSolid;
+        glm::vec3 color;
+    };
+
+    static std::unordered_map<uint8_t, VoxelDataNew> voxels;
+
+    struct VoxelData
+    {
+        unsigned char voxel_id;
+        unsigned char properties;
+        unsigned char light_level;
+    };
 
     enum VoxelProperties : unsigned char
     {
@@ -24,13 +44,6 @@ public:
         VoxelProperties_Usable = 1 << 5,
         VoxelProperties_Open = 1 << 6,
         VoxelProperties_Triggered = 1 << 7,
-    };
-
-    struct VoxelData
-    {
-        unsigned char voxel_id;
-        unsigned char properties;
-        unsigned char light_level;
     };
 
     struct VoxelColor
@@ -48,7 +61,6 @@ public:
 
         Chunk();
         VoxelData& GetVoxel(int pos_x, int pos_y, int pos_z);
-        VoxelColor GetColor(VoxelData voxel);
     };
 
     struct VoxelMesh
@@ -56,19 +68,16 @@ public:
         std::vector<float> vertices;
         std::vector<unsigned int> indices;
 
-        int AddVertex(float x, float y, float z, float r, float g, float b);
+        int AddVertex(float x, float y, float z, uint8_t id);
         void AddIndex(int v0, int v1, int v2);
     };
 
     Chunk GenerateTestChunk();
-    VoxelMesh GenerateChunkMesh(Chunk chunk);
     VoxelMesh GenerateChunkMesh2(Chunk chunk);
 
     void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
     void RenderMesh(VoxelMesh mesh, GLuint VAO);
     void FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-    //float GetVoxelColor(VoxelData voxel_id);
-    int ColorHeight(int y, int chunk_size);
     static const float voxel_colors[256][3];
 
 private:

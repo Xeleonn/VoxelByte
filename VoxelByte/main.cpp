@@ -29,15 +29,15 @@ Clock game_clock;
 Voxel voxel;
 
 // Settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+const unsigned int WINDOW_WIDTH = 1920;
+const unsigned int WINDOW_HEIGHT = 1080;
 bool wireframeMode = false;
 float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 
 // Camera
 Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f)); // Position camera to view the chunk
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
+float lastX = WINDOW_WIDTH / 2.0f;
+float lastY = WINDOW_HEIGHT / 2.0f;
 bool firstMouse = true;
 float viewDistance = 1000.0f;
 float cameraSpeed = camera.MovementSpeed;
@@ -50,7 +50,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // GLFW window creation
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "VoxelByte", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelByte", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -92,8 +92,15 @@ int main() {
     "#version 330 core\n"
     "out vec4 FragColor;\n"
     "in vec3 ourColor;\n"
+    "\n"
     "void main() {\n"
-    "   FragColor = vec4(ourColor, 1.0f);\n"
+    "    // Get normalized Y position (0.0 = bottom, 1.0 = top)\n"
+    "    float gradient = gl_FragCoord.y / 800.0; // adjust 800.0 to your window height\n"
+    "\n"
+    "    // Make the gradient darker at bottom, normal at top\n"
+    "    float shade = mix(0.6, 1.0, gradient);\n"
+    "\n"
+    "    FragColor = vec4(ourColor * shade, 1.0f);\n"
     "}\n\0"
     };
 
@@ -125,7 +132,7 @@ int main() {
         ourShader.use();
 
         // Pass projection matrix to shader
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, viewDistance);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, viewDistance);
         unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 

@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
+#include <unordered_map>
 #include "voxel.h"
 #include "shader.h"
 #include "clock.h"
@@ -20,31 +21,9 @@ Voxel::VoxelData& Voxel::Chunk::GetVoxel(int pos_x, int pos_y, int pos_z)
     return voxel_array[pos_z * CHUNK_SIZE * CHUNK_SIZE + pos_y * CHUNK_SIZE + pos_x];
 }
 
-Voxel::VoxelColor Voxel::Chunk::GetColor(Voxel::VoxelData voxel)
-{
-    int id = voxel.voxel_id;
-    Voxel::VoxelColor color_obj;
-    color_obj = { voxel_colors[id][0], voxel_colors[id][1], voxel_colors[id][2] };
-    return color_obj; // Return by value (a copy is made)
-}
-
-int Voxel::ColorHeight(int y, int chunk_size)
-{
-    if (y == chunk_size - 1)
-        return 120; // Green
-    if (y >= chunk_size - 30 && y < chunk_size - 1)
-        return 60; // Brown
-    if (y <= chunk_size - 31)
-        return 215; // Grey
-    else {
-        return 255; // White (default fallback)
-    }
-}
-
-
 Voxel::Chunk Voxel::GenerateTestChunk()
 {
-    std::vector<float> noise_data(128 * 128);
+    std::vector<float> noise_data(CHUNK_SIZE * CHUNK_SIZE);
 
     Chunk new_chunk;
     new_chunk.origin_x = 0;
@@ -68,14 +47,11 @@ Voxel::Chunk Voxel::GenerateTestChunk()
             {
                 VoxelData vd;
                 if (noise_data[x * Voxel::CHUNK_SIZE + z] * 256.0f > y)
-                    vd = {215, VoxelProperties_Solid, 0 };
+                    vd = { 215, VoxelProperties_Solid, 0 };
                 else
-                    vd = {0, VoxelProperties_Null, 0};
+                    vd = { 0, VoxelProperties_Null, 0 };
 
                 new_chunk.GetVoxel(x, y, z) = vd;
-                float r = voxel_colors[vd.voxel_id][0];
-                float g = voxel_colors[vd.voxel_id][1];
-                float b = voxel_colors[vd.voxel_id][2];
             }
         }
     }
@@ -83,14 +59,14 @@ Voxel::Chunk Voxel::GenerateTestChunk()
     return new_chunk;
 }
 
-int Voxel::VoxelMesh::AddVertex(float x, float y, float z, float r, float g, float b)
+int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
 {
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
-    vertices.push_back(r);
-    vertices.push_back(g);
-    vertices.push_back(b);
+    vertices.push_back(voxels[id].color.x);
+    vertices.push_back(voxels[id].color.y);
+    vertices.push_back(voxels[id].color.z);
     return (vertices.size() / 6) - 1;
 }
 
@@ -98,92 +74,6 @@ void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
     indices.push_back(v0);
     indices.push_back(v1);
     indices.push_back(v2);
-}
-
-Voxel::VoxelMesh Voxel::GenerateChunkMesh(Chunk chunk)
-{
-    VoxelMesh chunk_mesh;
-
-    for (int x = 0; x < CHUNK_SIZE; x++)
-    {
-        for (int y = 0; y < CHUNK_SIZE; y++)
-        {
-            for (int z = 0; z < CHUNK_SIZE; z++)
-            {
-                if (chunk.GetVoxel(x, y, z).properties & VoxelProperties::VoxelProperties_Solid)
-                {
-                    VoxelData current_voxel_data = chunk.GetVoxel(x, y, z);
-                    VoxelColor voxel_color = chunk.GetColor(current_voxel_data);
-
-                    int ocx = chunk.origin_x + x;
-                    int ocy = chunk.origin_y + y;
-                    int ocz = chunk.origin_z + z;
-
-                    // add triangles to top
-                    if ((y + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x, y + 1, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                    // add triangles to bottom
-                    if ((y == 0) || ((chunk.GetVoxel(x, y - 1, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                    // add triangles to right
-                    if ((x + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x + 1, y, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                    // add triangles to left
-                    if ((x == 0) || ((chunk.GetVoxel(x - 1, y, z).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                    // add triangles to back
-                    if ((z + 1 == CHUNK_SIZE) || ((chunk.GetVoxel(x, y, z + 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz + 1, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                    // add triangles to front
-                    if ((z == 0) || ((chunk.GetVoxel(x, y, z - 1).properties & VoxelProperties::VoxelProperties_Solid) == VoxelProperties::VoxelProperties_Null))
-                    {
-                        int v0 = chunk_mesh.AddVertex((float)ocx, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v1 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v2 = chunk_mesh.AddVertex((float)ocx + 1, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        int v3 = chunk_mesh.AddVertex((float)ocx, (float)ocy + 1, (float)ocz, voxel_color.r, voxel_color.g, voxel_color.b);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v0, v2, v3);
-                    }
-                }
-            }
-        }
-    }
-    return chunk_mesh;
 }
 
 Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
@@ -286,10 +176,10 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunk_mesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), 0.2f, 0.3f, 0.2f);
-                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), 0.2f, 0.3f, 0.2f);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), 0.2f, 0.3f, 0.2f);
-                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), 0.2f, 0.3f, 0.2f);
+                        int v0 = chunk_mesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
+                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
+                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
+                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
                         chunk_mesh.AddIndex(v0, v1, v2);
                         chunk_mesh.AddIndex(v1, v2, v3);
 
@@ -353,6 +243,42 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     VBO = 0;
     EBO = 0;
 }
+
+std::unordered_map<uint8_t, Voxel::VoxelDataNew> Voxel::voxels = {
+    
+    {   0, 
+    { 
+        .name       = "air", 
+        .isSolid    = false ,
+        .color      = {1.00000f, 1.00000f, 1.00000f}
+    } 
+    },
+
+    {   1,
+    {
+        .name       = "grass",
+        .isSolid    = true,
+        .color      = {0.00000f, 0.43226f, 0.00000f}
+    }
+    },
+
+    {   2,
+    {
+        .name       = "dirt",
+        .isSolid    = true,
+        .color      = {0.30000f, 0.15000f, 0.00000f}
+    }
+    },
+
+    {   3,
+    {
+        .name       = "stone",
+        .isSolid    = true,
+        .color      = {0.36508f, 0.36508f, 0.36508f}
+    }
+    },
+
+};
 
 const float Voxel::voxel_colors[256][3] = {
     // --- Red (Bright to Dark) ---
