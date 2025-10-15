@@ -38,7 +38,7 @@ float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 Player player;
 
 // Camera
-std::shared_ptr<Camera> pCamera = std::make_shared<Camera>(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f));
+std::shared_ptr<Camera> pCamera = std::make_shared<Camera>(glm::vec3(Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE * 1.5f + 100.0f));
 float lastX = WINDOW_WIDTH / 2.0f;
 float lastY = WINDOW_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -115,7 +115,7 @@ int main() {
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
     // Test chunk generation and mesh setup
-    Voxel::Chunk test_chunk = voxel.GenerateTestChunk();
+    Chunk test_chunk = voxel.GenerateTestChunk();
     Voxel::VoxelMesh test_mesh = voxel.GenerateChunkMesh2(test_chunk);
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
