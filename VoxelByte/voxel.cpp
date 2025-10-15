@@ -11,47 +11,59 @@ Voxel::Voxel()
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
-Voxel::Chunk::Chunk()
+
+// ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
+Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
 {
-    voxel_array.resize(Voxel::CHUNK_SIZE * Voxel::CHUNK_SIZE * Voxel::CHUNK_SIZE);
+    m_ChunkID = CID;
+    m_origin = origin;
+
+    m_voxel_array.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
 }
 
-Voxel::VoxelData& Voxel::Chunk::GetVoxel(int pos_x, int pos_y, int pos_z)
+glm::ivec3 Chunk::get_origin()
 {
-    return voxel_array[pos_z * CHUNK_SIZE * CHUNK_SIZE + pos_y * CHUNK_SIZE + pos_x];
+    return m_origin;
 }
 
-Voxel::Chunk Voxel::GenerateTestChunk()
+void Chunk::SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd)
 {
-    std::vector<float> noise_data(CHUNK_SIZE * CHUNK_SIZE);
+    m_voxel_array.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = vd;
+}
 
-    Chunk new_chunk;
-    new_chunk.origin_x = 0;
-    new_chunk.origin_y = 0;
-    new_chunk.origin_z = 0;
+Voxel::VoxelData Chunk::GetVoxel(glm::ivec3 pos) const
+{
+    return m_voxel_array.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
+}
+
+Chunk Voxel::GenerateTestChunk()
+{
+    std::vector<float> noise_data(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+
+    Chunk new_chunk(0, glm::ivec3(0, 0, 0));
 
     size_t noise_idx = 0;
-    for (int x = 0; x < Voxel::CHUNK_SIZE; x++)
+    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
     {
-        for (int y = 0; y < Voxel::CHUNK_SIZE; y++)
+        for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
         {
             noise_data[noise_idx++] = m_noise.GetNoise((float)x, (float)y);
         }
     }
 
-    for (int x = 0; x < Voxel::CHUNK_SIZE; x++)
+    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
     {
-        for (int y = 0; y < Voxel::CHUNK_SIZE; y++)
+        for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
         {
-            for (int z = 0; z < Voxel::CHUNK_SIZE; z++)
+            for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                if (noise_data[x * Voxel::CHUNK_SIZE + z] * 256.0f > y)
+                if ((noise_data[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
                     vd = { 215, VoxelProperties_Solid, 0 };
                 else
                     vd = { 0, VoxelProperties_Null, 0 };
 
-                new_chunk.GetVoxel(x, y, z) = vd;
+                new_chunk.SetVoxel(glm::vec3(x, y, z), vd);
             }
         }
     }
@@ -88,17 +100,17 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         int* x = new int[3] {0};
         int* q = new int[3] {0};
 
-        bool* mask = new bool[CHUNK_SIZE * CHUNK_SIZE] {false};
+        bool* mask = new bool[Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE] {false};
         q[d] = 1;
 
         // Check each slice of the chunk one at a time
-        for (x[d] = -1; x[d] < CHUNK_SIZE;)
+        for (x[d] = -1; x[d] < Chunk::CHUNK_SIZE;)
         {
             // Compute the mask
             int n = 0;
-            for (x[v] = 0; x[v] < CHUNK_SIZE; x[v]++)
+            for (x[v] = 0; x[v] < Chunk::CHUNK_SIZE; x[v]++)
             {
-                for (x[u] = 0; x[u] < CHUNK_SIZE; x[u]++)
+                for (x[u] = 0; x[u] < Chunk::CHUNK_SIZE; x[u]++)
                 {
                     // q determines the direction (X, Y or Z) that we are searching
                     // m.IsBlockAt(x,y,z) takes global map positions and returns true if a block exists there
@@ -108,12 +120,12 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                     bool block_compare;
 
                     if (0 <= x[d])
-                        block_current = !(chunk.GetVoxel(x[0], x[1], x[2]).properties & VoxelProperties::VoxelProperties_Solid);
+                        block_current = !(chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2])).properties & VoxelProperties::VoxelProperties_Solid);
                     else
                         block_current = true;
 
-                    if (x[d] < (CHUNK_SIZE - 1))
-                        block_compare = !(chunk.GetVoxel(x[0] + q[0], x[1] + q[1], x[2] + q[2]).properties & VoxelProperties::VoxelProperties_Solid);
+                    if (x[d] < (Chunk::CHUNK_SIZE - 1))
+                        block_compare = !(chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2])).properties & VoxelProperties::VoxelProperties_Solid);
                     else
                         block_compare = true;
 
@@ -131,15 +143,15 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
             // Generate a mesh from the mask using lexicographic ordering,      
             //   by looping over each block in this slice of the chunk
-            for (j = 0; j < CHUNK_SIZE; j++)
+            for (j = 0; j < Chunk::CHUNK_SIZE; j++)
             {
-                for (i = 0; i < CHUNK_SIZE;)
+                for (i = 0; i < Chunk::CHUNK_SIZE;)
                 {
                     if (mask[n])
                     {
                         // Compute the width of this quad and store it in w                        
                         //   This is done by searching along the current axis until mask[n + w] is false
-                        for (w = 1; ((i + w) < CHUNK_SIZE) && mask[n + w]; w++) {}
+                        for (w = 1; ((i + w) < Chunk::CHUNK_SIZE) && mask[n + w]; w++) {}
 
                         // Compute the height of this quad and store it in h                        
                         //   This is done by checking if every block next to this row (range 0 to w) is also part of the mask.
@@ -147,13 +159,13 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                         //   greedy meshing will attempt to expand this quad out to CHUNK_SIZE x 5, but will stop if it reaches a hole in the mask
 
                         bool done = false;
-                        for (h = 1; (j + h) < CHUNK_SIZE; h++)
+                        for (h = 1; (j + h) < Chunk::CHUNK_SIZE; h++)
                         {
                             // Check each block next to this quad
                             for (k = 0; k < w; k++)
                             {
                                 // If there's a hole in the mask, exit
-                                if (!mask[n + k + h * CHUNK_SIZE])
+                                if (!mask[n + k + h * Chunk::CHUNK_SIZE])
                                 {
                                     done = true;
                                     break;
@@ -186,7 +198,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                         // Clear this part of the mask, so we don't add duplicate faces
                         for (l = 0; l < h; l++)
                             for (k = 0; k < w; k++)
-                                mask[n + k + l * CHUNK_SIZE] = false;
+                                mask[n + k + l * Chunk::CHUNK_SIZE] = false;
 
                         // Increment counters and continue
                         i += w;

@@ -2,20 +2,22 @@
 #define VOXEL_H
 
 #include <glm/glm.hpp>
-#include <vector>
 #include <glad/glad.h>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include "../include/FastNoiseLite/FastNoiseLite.h"
+
+struct Chunk;
+class Voxel;
+class ChunkSystem;
 
 class Voxel
 {
 public:
     Voxel();
 
-    static const int CHUNK_SIZE = 128;
-
-    uint8_t voxelId = 1;
+    uint8_t voxelId = 3;
 
     struct VoxelDataNew
     {
@@ -53,16 +55,6 @@ public:
         float b;
     };
 
-    struct Chunk
-    {
-        int origin_x = 0, origin_y = 0, origin_z = 0;
-        std::vector<VoxelData> voxel_array;
-        float color[3];
-
-        Chunk();
-        VoxelData& GetVoxel(int pos_x, int pos_y, int pos_z);
-    };
-
     struct VoxelMesh
     {
         std::vector<float> vertices;
@@ -82,6 +74,33 @@ public:
 
 private:
     FastNoiseLite m_noise;
+};
+
+typedef long int ChunkID;
+
+class Chunk
+{
+public:
+    static const int CHUNK_SIZE = 128;
+
+    Chunk(ChunkID CID, glm::ivec3 origin);
+    glm::ivec3 get_origin();
+    inline void SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd);
+    Voxel::VoxelData GetVoxel(glm::ivec3 pos) const;
+
+private:
+    ChunkID m_ChunkID;
+    glm::ivec3 m_origin;
+    std::vector<Voxel::VoxelData> m_voxel_array;
+};
+
+class ChunkSystem {
+public:
+    static const int WORLD_CHUNK_RADIUS = 2048;
+    static const int CHUNK_HEIGHT = 4;
+    
+private:
+
 };
 
 #endif
