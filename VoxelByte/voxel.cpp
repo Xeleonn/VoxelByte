@@ -11,6 +11,29 @@ Voxel::Voxel()
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
+bool Voxel::m_initialized = false;
+Voxel::VoxelDataNew Voxel::m_voxelRegistry[256];
+
+void Voxel::init() {
+    if (m_initialized) return;
+    m_initialized = true;
+
+    // Fill with defaults
+    for (int i = 0; i < 256; i++) {
+        m_voxelRegistry[i] = { "undefined", false, {1.0f, 0.0f, 1.0f} };
+    }
+
+    // Voxel ID registry
+    m_voxelRegistry[0] = { "air",   false, {1.0f, 1.0f, 1.0f} };
+    m_voxelRegistry[1] = { "grass", true,  {0.0f, 0.43226f, 0.0f} };
+    m_voxelRegistry[2] = { "dirt",  true,  {0.3f, 0.15f,   0.0f} };
+    m_voxelRegistry[3] = { "stone", true,  {0.36508f, 0.36508f, 0.36508f} };
+}
+
+const Voxel::VoxelDataNew& Voxel::getVoxel(uint8_t voxelId) {
+    init();
+    return m_voxelRegistry[voxelId];
+}
 
 // ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
 Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
@@ -76,9 +99,9 @@ int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
-    vertices.push_back(voxels[id].color.x);
-    vertices.push_back(voxels[id].color.y);
-    vertices.push_back(voxels[id].color.z);
+    vertices.push_back(getVoxel(id).color.x);
+    vertices.push_back(getVoxel(id).color.y);
+    vertices.push_back(getVoxel(id).color.z);
     return (vertices.size() / 6) - 1;
 }
 
@@ -255,42 +278,6 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     VBO = 0;
     EBO = 0;
 }
-
-std::unordered_map<uint8_t, Voxel::VoxelDataNew> Voxel::voxels = {
-    
-    {   0, 
-    { 
-        .name       = "air", 
-        .isSolid    = false ,
-        .color      = {1.00000f, 1.00000f, 1.00000f}
-    } 
-    },
-
-    {   1,
-    {
-        .name       = "grass",
-        .isSolid    = true,
-        .color      = {0.00000f, 0.43226f, 0.00000f}
-    }
-    },
-
-    {   2,
-    {
-        .name       = "dirt",
-        .isSolid    = true,
-        .color      = {0.30000f, 0.15000f, 0.00000f}
-    }
-    },
-
-    {   3,
-    {
-        .name       = "stone",
-        .isSolid    = true,
-        .color      = {0.36508f, 0.36508f, 0.36508f}
-    }
-    },
-
-};
 
 const float Voxel::voxel_colors[256][3] = {
     // --- Red (Bright to Dark) ---

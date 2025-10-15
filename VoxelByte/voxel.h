@@ -17,16 +17,15 @@ class Voxel
 public:
     Voxel();
 
-    uint8_t voxelId = 3;
+    uint8_t voxelId = 1;
 
-    struct VoxelDataNew
-    {
-        std::string name;
+    struct VoxelDataNew {
+        const char* name;
         bool isSolid;
         glm::vec3 color;
     };
 
-    static std::unordered_map<uint8_t, VoxelDataNew> voxels;
+    static const VoxelDataNew& getVoxel(uint8_t voxelId);
 
     struct VoxelData
     {
@@ -74,6 +73,9 @@ public:
 
 private:
     FastNoiseLite m_noise;
+    static VoxelDataNew m_voxelRegistry[256];
+    static bool m_initialized;
+    static void init();
 };
 
 typedef long int ChunkID;

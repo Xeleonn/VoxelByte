@@ -255,7 +255,7 @@ void updateImGui() {
     ImGui::Text("Yaw: %.1f, Pitch: %.1f", pCamera->Yaw, pCamera->Pitch);
 
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Settings")) {
+    if (ImGui::CollapsingHeader("Window")) {
         ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
         if (wireframeMode) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -264,12 +264,18 @@ void updateImGui() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         ImGui::Separator();
-        ImGui::SliderFloat("Camera Speed", &cameraSpeed, 1.0f, 1000.0f);
-        ImGui::Separator();
-        ImGui::SliderFloat("View Distance", &viewDistance, 100.0f, 10000.0f);
-        ImGui::Separator();
         ImGui::Text("glClearColor:");
         ImGui::ColorEdit3("Color", clearColor);
+    }
+
+    ImGui::Separator();
+    if (ImGui::CollapsingHeader("Camera")) {
+        ImGui::Separator();
+        ImGui::Text("Speed:");
+        ImGui::SliderFloat(" ", &cameraSpeed, 1.0f, 1000.0f);
+        ImGui::Separator();
+        ImGui::Text("View Distance:");
+        ImGui::SliderFloat("  ", &viewDistance, 100.0f, 10000.0f);
         ImGui::Spacing();
     }
     ImGui::End();
