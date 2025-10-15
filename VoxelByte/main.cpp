@@ -11,7 +11,7 @@
 
 #include "clock.h"
 #include "shader.h"
-#include "camera.h"
+#include "player.h"
 #include "voxel.h"
 
 #include <iostream>
@@ -34,15 +34,19 @@ const unsigned int WINDOW_HEIGHT = 1080;
 bool wireframeMode = false;
 float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 
+// Player
+Player player;
+
 // Camera
-Camera camera(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f)); // Position camera to view the chunk
+std::shared_ptr<Camera> pCamera = std::make_shared<Camera>(glm::vec3(Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE / 2, Voxel::CHUNK_SIZE * 1.5f + 100.0f));
 float lastX = WINDOW_WIDTH / 2.0f;
 float lastY = WINDOW_HEIGHT / 2.0f;
 bool firstMouse = true;
 float viewDistance = 1000.0f;
-float cameraSpeed = camera.MovementSpeed;
+float cameraSpeed = pCamera->MovementSpeed;
 
 int main() {
+
     // GLFW: Initialize and configure
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -95,9 +99,9 @@ int main() {
     "\n"
     "void main() {\n"
     "    // Get normalized Y position (0.0 = bottom, 1.0 = top)\n"
-    "    float gradient = gl_FragCoord.y / 800.0; // adjust 800.0 to your window height\n"
+    "    float gradient = gl_FragCoord.y / 1080.0; \n" // adjust to window height
     "\n"
-    "    // Make the gradient darker at bottom, normal at top\n"
+        // Make the gradient darker at bottom, normal at top
     "    float shade = mix(0.6, 1.0, gradient);\n"
     "\n"
     "    FragColor = vec4(ourColor * shade, 1.0f);\n"
@@ -132,12 +136,12 @@ int main() {
         ourShader.use();
 
         // Pass projection matrix to shader
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, viewDistance);
+        glm::mat4 projection = glm::perspective(glm::radians(pCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, viewDistance);
         unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         // Camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 view = pCamera->GetViewMatrix();
         unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -145,7 +149,7 @@ int main() {
         unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        camera.MovementSpeed = cameraSpeed;
+        pCamera->MovementSpeed = cameraSpeed;
 
         voxel.RenderMesh(test_mesh, chunkVAO);
 
@@ -189,17 +193,17 @@ void processInput(GLFWwindow* window) {
     // Camera movement
     float deltaTime = game_clock.GetDeltaTime();
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        pCamera->ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        pCamera->ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        pCamera->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        pCamera->ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
+        pCamera->ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
+        pCamera->ProcessKeyboard(DOWN, deltaTime);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -224,7 +228,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
         lastX = xpos;
         lastY = ypos;
 
-        camera.ProcessMouseMovement(xoffset, yoffset);
+        pCamera->ProcessMouseMovement(xoffset, yoffset);
     }
     else { // If cursor is normal, reset firstMouse so movement isn't jerky when re-disabling
         firstMouse = true;
@@ -233,7 +237,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        camera.ProcessMouseScroll(static_cast<float>(yoffset));
+        pCamera->ProcessMouseScroll(static_cast<float>(yoffset));
     }
 }
 
@@ -247,8 +251,8 @@ void updateImGui() {
 
     ImGui::Separator();
     ImGui::Text("Camera Position:");
-    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", camera.Position.x, camera.Position.y, camera.Position.z);
-    ImGui::Text("Yaw: %.1f, Pitch: %.1f", camera.Yaw, camera.Pitch);
+    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", pCamera->Position.x, pCamera->Position.y, pCamera->Position.z);
+    ImGui::Text("Yaw: %.1f, Pitch: %.1f", pCamera->Yaw, pCamera->Pitch);
 
     ImGui::Separator();
     if (ImGui::CollapsingHeader("Settings")) {
