@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
@@ -27,6 +28,7 @@ const float ZOOM = 45.0f;
 class Camera
 {
 public:
+
     // Camera Attributes
     glm::vec3 Position;
     glm::vec3 Front;
@@ -114,14 +116,6 @@ public:
             Zoom = 10.0f;
         if (Zoom > 45.0f)
             Zoom = 45.0f;
-    }
-
-    // Processes gravity if set to true
-    void ProcessGravity(bool choice, float deltaTime)
-    {
-        float gravity = MovementSpeed * deltaTime;
-        if (choice)
-            Position -= WorldUp * gravity;
     }
 
 private:

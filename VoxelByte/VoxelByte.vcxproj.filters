@@ -57,6 +57,9 @@
     <ClCompile Include="..\include\glad\glad.c">
       <Filter>glad</Filter>
     </ClCompile>
+    <ClCompile Include="player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="..\include\glad\glad.h">
       <Filter>glad</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
