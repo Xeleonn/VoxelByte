@@ -16,11 +16,11 @@
 
 #include <iostream>
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-void updateImGui();
+void updateImGui(GLFWwindow* window);
 
 // Initialize clock
 Clock game_clock;
@@ -56,7 +56,7 @@ int main() {
     // GLFW window creation
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelByte", NULL, NULL);
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -153,7 +153,7 @@ int main() {
 
         voxel.RenderMesh(test_mesh, chunkVAO);
 
-        updateImGui();
+        updateImGui(window);
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -206,7 +206,7 @@ void processInput(GLFWwindow* window) {
         pCamera->ProcessKeyboard(DOWN, deltaTime);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
@@ -241,8 +241,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
-void updateImGui() {
-    ImGui::SetNextWindowSize(ImVec2(305, 300));
+void updateImGui(GLFWwindow* window) {
+    ImGui::SetNextWindowSize(ImVec2(305, WINDOW_HEIGHT));
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     ImGui::Text("Time: %.2f s", game_clock.GetTime());
@@ -256,7 +256,22 @@ void updateImGui() {
 
     ImGui::Separator();
     if (ImGui::CollapsingHeader("Window")) {
-        ImGui::Checkbox("Wireframe Meshes", &wireframeMode);
+        const char* items[] = { "1280x720", "1600x900", "1920x1080", "2560x1140" };
+        static int currentItem = 2;
+        ImGui::Text("Window Size:");
+        if (ImGui::Combo("   ", &currentItem, items, IM_ARRAYSIZE(items)))
+        {
+            if (currentItem == 0)
+                glfwSetWindowSize(window, 1280, 720);
+            else if (currentItem == 1)
+                glfwSetWindowSize(window, 1600, 900);
+            else if (currentItem == 2)
+                glfwSetWindowSize(window, 1920, 1080);
+            else if (currentItem == 3)
+                glfwSetWindowSize(window, 2560, 1440);
+        }
+        ImGui::Separator();
+        ImGui::Checkbox(" Wireframe Meshes", &wireframeMode);
         if (wireframeMode) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
@@ -265,7 +280,7 @@ void updateImGui() {
         }
         ImGui::Separator();
         ImGui::Text("glClearColor:");
-        ImGui::ColorEdit3("Color", clearColor);
+        ImGui::ColorEdit3(" ", clearColor);
     }
 
     ImGui::Separator();
