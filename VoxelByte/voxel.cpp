@@ -26,7 +26,7 @@ void Voxel::init() {
     // Voxel ID registry
     m_voxelRegistry[0] = { "air",   false, {1.0f, 1.0f, 1.0f} };
     m_voxelRegistry[1] = { "grass", true,  {0.0f, 0.43226f, 0.0f} };
-    m_voxelRegistry[2] = { "dirt",  true,  {0.3f, 0.15f,   0.0f} };
+    m_voxelRegistry[2] = { "dirt",  true,  {0.3f, 0.15f, 0.0f} };
     m_voxelRegistry[3] = { "stone", true,  {0.36508f, 0.36508f, 0.36508f} };
 }
 
@@ -38,39 +38,39 @@ const Voxel::VoxelDataNew& Voxel::getVoxel(uint8_t voxelId) {
 // ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
 Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
 {
-    m_ChunkID = CID;
+    m_chunkID = CID;
     m_origin = origin;
 
-    m_voxel_array.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+    m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
 }
 
-glm::ivec3 Chunk::get_origin()
+glm::ivec3 Chunk::getOrigin()
 {
     return m_origin;
 }
 
 void Chunk::SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd)
 {
-    m_voxel_array.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = vd;
+    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = vd;
 }
 
 Voxel::VoxelData Chunk::GetVoxel(glm::ivec3 pos) const
 {
-    return m_voxel_array.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
+    return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
 }
 
 Chunk Voxel::GenerateTestChunk()
 {
-    std::vector<float> noise_data(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+    std::vector<float> noiseData(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
 
-    Chunk new_chunk(0, glm::ivec3(0, 0, 0));
+    Chunk newChunk(0, glm::ivec3(0, 0, 0));
 
     size_t noise_idx = 0;
     for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
     {
         for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
         {
-            noise_data[noise_idx++] = m_noise.GetNoise((float)x, (float)y);
+            noiseData[noise_idx++] = m_noise.GetNoise((float)x, (float)y);
         }
     }
 
@@ -81,17 +81,17 @@ Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
             {
                 VoxelData vd;
-                if ((noise_data[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
+                if ((noiseData[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
                     vd = { 215, VoxelProperties_Solid, 0 };
                 else
                     vd = { 0, VoxelProperties_Null, 0 };
 
-                new_chunk.SetVoxel(glm::vec3(x, y, z), vd);
+                newChunk.SetVoxel(glm::vec3(x, y, z), vd);
             }
         }
     }
 
-    return new_chunk;
+    return newChunk;
 }
 
 int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
@@ -113,7 +113,7 @@ void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
 
 Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 {
-    VoxelMesh chunk_mesh;
+    VoxelMesh chunkMesh;
     // Sweep over each axis (X, Y and Z)
     for (int d = 0; d < 3; d++)
     {
@@ -139,23 +139,23 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                     // m.IsBlockAt(x,y,z) takes global map positions and returns true if a block exists there
 
 
-                    bool block_current;
-                    bool block_compare;
+                    bool blockCurrent;
+                    bool blockCompare;
 
                     if (0 <= x[d])
-                        block_current = !(chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2])).properties & VoxelProperties::VoxelProperties_Solid);
+                        blockCurrent = !(chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2])).properties & VoxelProperties::VoxelProperties_Solid);
                     else
-                        block_current = true;
+                        blockCurrent = true;
 
                     if (x[d] < (Chunk::CHUNK_SIZE - 1))
-                        block_compare = !(chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2])).properties & VoxelProperties::VoxelProperties_Solid);
+                        blockCompare = !(chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2])).properties & VoxelProperties::VoxelProperties_Solid);
                     else
-                        block_compare = true;
+                        blockCompare = true;
 
 
                     // The mask is set to true if there is a visible face between two blocks,
                     //   i.e. both aren't empty and both aren't blocks
-                    mask[n] = (block_current != block_compare);
+                    mask[n] = (blockCurrent != blockCompare);
                     n += 1;
                 }
             }
@@ -211,12 +211,12 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunk_mesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
-                        int v1 = chunk_mesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
-                        int v2 = chunk_mesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
-                        int v3 = chunk_mesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
-                        chunk_mesh.AddIndex(v0, v1, v2);
-                        chunk_mesh.AddIndex(v1, v2, v3);
+                        int v0 = chunkMesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
+                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
+                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
+                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
+                        chunkMesh.AddIndex(v0, v1, v2);
+                        chunkMesh.AddIndex(v1, v2, v3);
 
                         // Clear this part of the mask, so we don't add duplicate faces
                         for (l = 0; l < h; l++)
@@ -237,7 +237,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         }
     }
 
-    return chunk_mesh;
+    return chunkMesh;
 }
 
 void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
@@ -279,7 +279,7 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     EBO = 0;
 }
 
-const float Voxel::voxel_colors[256][3] = {
+const float Voxel::voxelColors[256][3] = {
     // --- Red (Bright to Dark) ---
     {1.00000f, 0.00000f, 0.00000f}, // 0: Bright Red
     {0.97419f, 0.00000f, 0.00000f}, // 1

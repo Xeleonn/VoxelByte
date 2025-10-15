@@ -17,13 +17,13 @@
 #include <iostream>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void updateImGui(GLFWwindow* window);
 
 // Initialize clock
-Clock game_clock;
+Clock gameClock;
 
 // Initialize voxel system
 Voxel voxel;
@@ -57,8 +57,8 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelByte", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSwapInterval(0);
 
@@ -115,15 +115,15 @@ int main() {
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
     // Test chunk generation and mesh setup
-    Chunk test_chunk = voxel.GenerateTestChunk();
-    Voxel::VoxelMesh test_mesh = voxel.GenerateChunkMesh2(test_chunk);
+    Chunk testChunk = voxel.GenerateTestChunk();
+    Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
-    voxel.SetupRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
+    voxel.SetupRenderMesh(testMesh, chunkVBO, chunkEBO, chunkVAO);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-        game_clock.Update();
+        gameClock.Update();
         processInput(window);
 
         glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
@@ -151,7 +151,7 @@ int main() {
 
         pCamera->MovementSpeed = cameraSpeed;
 
-        voxel.RenderMesh(test_mesh, chunkVAO);
+        voxel.RenderMesh(testMesh, chunkVAO);
 
         updateImGui(window);
         ImGui::Render();
@@ -163,7 +163,7 @@ int main() {
 
     // Cleanup
     if (chunkVAO != 0) {
-        voxel.FreeRenderMesh(test_mesh, chunkVBO, chunkEBO, chunkVAO);
+        voxel.FreeRenderMesh(testMesh, chunkVBO, chunkEBO, chunkVAO);
     }
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -191,7 +191,7 @@ void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 
     // Camera movement
-    float deltaTime = game_clock.GetDeltaTime();
+    float deltaTime = gameClock.GetDeltaTime();
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         pCamera->ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -210,7 +210,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
     // Only process mouse if cursor is disabled
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
         float xpos = static_cast<float>(xposIn);
@@ -235,7 +235,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     }
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
         pCamera->ProcessMouseScroll(static_cast<float>(yoffset));
     }
@@ -245,9 +245,9 @@ void updateImGui(GLFWwindow* window) {
     ImGui::SetNextWindowSize(ImVec2(305, WINDOW_HEIGHT));
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-    ImGui::Text("Time: %.2f s", game_clock.GetTime());
-    ImGui::Text("Delta Time: %.4f ms", game_clock.GetDeltaTime() * 1000.0f); // ms
-    ImGui::Text("%.1f FPS", game_clock.GetFPS());
+    ImGui::Text("Time: %.2f s", gameClock.GetTime());
+    ImGui::Text("Delta Time: %.4f ms", gameClock.GetDeltaTime() * 1000.0f); // ms
+    ImGui::Text("%.1f FPS", gameClock.GetFPS());
 
     ImGui::Separator();
     ImGui::Text("Camera Position:");

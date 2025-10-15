@@ -1,6 +1,6 @@
-﻿  main.cpp
-G:\dev\repos\VoxelByte\VoxelByte\shader.h(33,22): warning C4101: 'geometry': unreferenced local variable
-  (compiling source file 'main.cpp')
-  
-G:\dev\repos\VoxelByte\VoxelByte\main.cpp(190,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-LINK : fatal error LNK1104: cannot open file 'G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe'
+﻿  Generating code
+  289 of 2361 functions (12.2%) were compiled, the rest were copied from previous compilation.
+    59 functions were new in current compilation
+    108 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe

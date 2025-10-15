@@ -29,9 +29,9 @@ public:
 
     struct VoxelData
     {
-        unsigned char voxel_id;
+        unsigned char voxelId;
         unsigned char properties;
-        unsigned char light_level;
+        unsigned char lightLevel;
     };
 
     enum VoxelProperties : unsigned char
@@ -69,7 +69,7 @@ public:
     void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
     void RenderMesh(VoxelMesh mesh, GLuint VAO);
     void FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-    static const float voxel_colors[256][3];
+    static const float voxelColors[256][3];
 
 private:
     FastNoiseLite m_noise;
@@ -86,14 +86,14 @@ public:
     static const int CHUNK_SIZE = 128;
 
     Chunk(ChunkID CID, glm::ivec3 origin);
-    glm::ivec3 get_origin();
+    glm::ivec3 getOrigin();
     inline void SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd);
     Voxel::VoxelData GetVoxel(glm::ivec3 pos) const;
 
 private:
-    ChunkID m_ChunkID;
+    ChunkID m_chunkID;
     glm::ivec3 m_origin;
-    std::vector<Voxel::VoxelData> m_voxel_array;
+    std::vector<Voxel::VoxelData> m_voxelArray;
 };
 
 class ChunkSystem {
