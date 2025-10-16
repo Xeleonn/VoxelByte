@@ -75,7 +75,7 @@ void Voxel::init() {
     };
 }
 
-const Voxel::VoxelData& Voxel::getVoxel(uint8_t voxelId) {
+const Voxel::VoxelData& Voxel::GetVoxelData(uint8_t voxelId) {
     init();
     return m_voxelRegistry[voxelId];
 }
@@ -126,6 +126,7 @@ Chunk Voxel::GenerateTestChunk()
             for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
             {
                 uint8_t v_id;
+
                 if ((noiseData[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
                     v_id = 1;
                 else
@@ -144,10 +145,10 @@ int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
-    vertices.push_back(getVoxel(id).color.x);
-    vertices.push_back(getVoxel(id).color.y);
-    vertices.push_back(getVoxel(id).color.z);
-    return (vertices.size() / 6) - 1;
+    vertices.push_back(GetVoxelData(id).color.x);
+    vertices.push_back(GetVoxelData(id).color.y);
+    vertices.push_back(GetVoxelData(id).color.z);
+    return static_cast<int>((vertices.size() / 6) - 1);
 }
 
 void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
@@ -189,7 +190,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                     if (0 <= x[d]) {
                         uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2]));
-                        blockCurrent = !Voxel::getVoxel(voxelId).solid;
+                        blockCurrent = !Voxel::GetVoxelData(voxelId).solid;
                     }
                     else {
                         blockCurrent = true;
@@ -197,13 +198,11 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                     if (x[d] < (Chunk::CHUNK_SIZE - 1)) {
                         uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]));
-                        blockCompare = !Voxel::getVoxel(voxelId).solid;
+                        blockCompare = !Voxel::GetVoxelData(voxelId).solid;
                     }
                     else {
                         blockCompare = true;
                     }
-
-
 
                     // The mask is set to true if there is a visible face between two blocks,
                     //   i.e. both aren't empty and both aren't blocks
@@ -316,7 +315,7 @@ void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VA
 void Voxel::RenderMesh(VoxelMesh mesh, GLuint VAO)
 {
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 

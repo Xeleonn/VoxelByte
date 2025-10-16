@@ -30,7 +30,7 @@ public:
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
         // if geometry shader is given, compile geometry shader
-        unsigned int geometry;
+        //unsigned int geometry;
         // shader Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);

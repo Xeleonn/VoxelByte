@@ -1,23 +1,7 @@
-﻿  main.cpp
-G:\dev\repos\VoxelByte\VoxelByte\shader.h(33,22): warning C4101: 'geometry': unreferenced local variable
-  (compiling source file 'main.cpp')
-  
-G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
-  (compiling source file 'main.cpp')
-      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
-      see declaration of 'Chunk'
-  
-G:\dev\repos\VoxelByte\VoxelByte\main.cpp(209,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  voxel.cpp
+﻿  voxel.cpp
 G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
   (compiling source file 'voxel.cpp')
       G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
       see declaration of 'Chunk'
   
-G:\dev\repos\VoxelByte\VoxelByte\shader.h(33,22): warning C4101: 'geometry': unreferenced local variable
-  (compiling source file 'voxel.cpp')
-  
-G:\dev\repos\VoxelByte\VoxelByte\voxel.cpp(150,34): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-G:\dev\repos\VoxelByte\VoxelByte\voxel.cpp(319,51): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-  Generating Code...
   VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Debug\VoxelByte.exe

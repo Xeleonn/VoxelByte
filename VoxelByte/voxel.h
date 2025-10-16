@@ -29,7 +29,7 @@ public:
         bool affectedByGravity;
     };
 
-    static const VoxelData& getVoxel(uint8_t voxelId);
+    static const VoxelData& GetVoxelData(uint8_t voxelId);
 
     struct VoxelMesh
     {

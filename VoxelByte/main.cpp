@@ -206,7 +206,7 @@ void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 
     // Camera movement
-    float deltaTime = gameClock.GetDeltaTime();
+    float deltaTime = float(gameClock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         pCamera->ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
