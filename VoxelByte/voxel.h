@@ -17,7 +17,7 @@ class Voxel
 public:
     Voxel();
 
-    uint8_t voxelId = 4;
+    uint8_t voxelId = 1;
 
     struct VoxelData {
         const char* name;
@@ -30,33 +30,6 @@ public:
     };
 
     static const VoxelData& getVoxel(uint8_t voxelId);
-
-    struct VoxelDataOld
-    {
-        unsigned char voxelId;
-        unsigned char properties;
-        unsigned char lightLevel;
-    };
-
-    enum VoxelProperties : unsigned char
-    {
-        VoxelProperties_Null = 0,
-        VoxelProperties_Solid = 1 << 0,
-        VoxelProperties_Destructable = 1 << 1,
-        VoxelProperties_Liquid = 1 << 2,
-        VoxelProperties_Transparent = 1 << 3,
-        VoxelProperties_Light = 1 << 4,
-        VoxelProperties_Usable = 1 << 5,
-        VoxelProperties_Open = 1 << 6,
-        VoxelProperties_Triggered = 1 << 7,
-    };
-
-    struct VoxelColor
-    {
-        float r;
-        float g;
-        float b;
-    };
 
     struct VoxelMesh
     {
@@ -91,13 +64,13 @@ public:
 
     Chunk(ChunkID CID, glm::ivec3 origin);
     glm::ivec3 getOrigin();
-    inline void SetVoxel(glm::ivec3 pos, const Voxel::VoxelDataOld& vd);
-    Voxel::VoxelDataOld GetVoxel(glm::ivec3 pos) const;
+    inline void SetVoxel(glm::ivec3 pos, const uint8_t& vd);
+    uint8_t GetVoxel(glm::ivec3 pos) const;
 
 private:
     ChunkID m_chunkID;
     glm::ivec3 m_origin;
-    std::vector<Voxel::VoxelDataOld> m_voxelArray;
+    std::vector<uint8_t> m_voxelArray;
 };
 
 class ChunkSystem {

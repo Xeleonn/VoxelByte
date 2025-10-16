@@ -94,12 +94,12 @@ glm::ivec3 Chunk::getOrigin()
     return m_origin;
 }
 
-void Chunk::SetVoxel(glm::ivec3 pos, const Voxel::VoxelDataOld& vd)
+void Chunk::SetVoxel(glm::ivec3 pos, const uint8_t& id)
 {
-    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = vd;
+    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = id;
 }
 
-Voxel::VoxelDataOld Chunk::GetVoxel(glm::ivec3 pos) const
+uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
 {
     return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
 }
@@ -125,13 +125,13 @@ Chunk Voxel::GenerateTestChunk()
         {
             for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
             {
-                VoxelDataOld vd;
+                uint8_t v_id;
                 if ((noiseData[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
-                    vd = { 215, VoxelProperties_Solid, 0 };
+                    v_id = 1;
                 else
-                    vd = { 0, VoxelProperties_Null, 0 };
+                    v_id = 0;
 
-                newChunk.SetVoxel(glm::vec3(x, y, z), vd);
+                newChunk.SetVoxel(glm::vec3(x, y, z), v_id);
             }
         }
     }
@@ -187,15 +187,22 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                     bool blockCurrent;
                     bool blockCompare;
 
-                    if (0 <= x[d])
-                        blockCurrent = !(chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2])).properties & VoxelProperties::VoxelProperties_Solid);
-                    else
+                    if (0 <= x[d]) {
+                        uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2]));
+                        blockCurrent = !Voxel::getVoxel(voxelId).solid;
+                    }
+                    else {
                         blockCurrent = true;
+                    }
 
-                    if (x[d] < (Chunk::CHUNK_SIZE - 1))
-                        blockCompare = !(chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2])).properties & VoxelProperties::VoxelProperties_Solid);
-                    else
+                    if (x[d] < (Chunk::CHUNK_SIZE - 1)) {
+                        uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]));
+                        blockCompare = !Voxel::getVoxel(voxelId).solid;
+                    }
+                    else {
                         blockCompare = true;
+                    }
+
 
 
                     // The mask is set to true if there is a visible face between two blocks,
