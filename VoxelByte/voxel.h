@@ -17,17 +17,21 @@ class Voxel
 public:
     Voxel();
 
-    uint8_t voxelId = 1;
+    uint8_t voxelId = 4;
 
-    struct VoxelDataNew {
+    struct VoxelData {
         const char* name;
-        bool isSolid;
         glm::vec3 color;
+        bool solid;
+        bool destructible;
+        bool interactable;
+        bool flammable;
+        bool affectedByGravity;
     };
 
-    static const VoxelDataNew& getVoxel(uint8_t voxelId);
+    static const VoxelData& getVoxel(uint8_t voxelId);
 
-    struct VoxelData
+    struct VoxelDataOld
     {
         unsigned char voxelId;
         unsigned char properties;
@@ -73,7 +77,7 @@ public:
 
 private:
     FastNoiseLite m_noise;
-    static VoxelDataNew m_voxelRegistry[256];
+    static VoxelData m_voxelRegistry[256];
     static bool m_initialized;
     static void init();
 };
@@ -87,13 +91,13 @@ public:
 
     Chunk(ChunkID CID, glm::ivec3 origin);
     glm::ivec3 getOrigin();
-    inline void SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd);
-    Voxel::VoxelData GetVoxel(glm::ivec3 pos) const;
+    inline void SetVoxel(glm::ivec3 pos, const Voxel::VoxelDataOld& vd);
+    Voxel::VoxelDataOld GetVoxel(glm::ivec3 pos) const;
 
 private:
     ChunkID m_chunkID;
     glm::ivec3 m_origin;
-    std::vector<Voxel::VoxelData> m_voxelArray;
+    std::vector<Voxel::VoxelDataOld> m_voxelArray;
 };
 
 class ChunkSystem {

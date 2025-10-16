@@ -12,7 +12,7 @@ Voxel::Voxel()
 }
 
 bool Voxel::m_initialized = false;
-Voxel::VoxelDataNew Voxel::m_voxelRegistry[256];
+Voxel::VoxelData Voxel::m_voxelRegistry[256];
 
 void Voxel::init() {
     if (m_initialized) return;
@@ -20,17 +20,62 @@ void Voxel::init() {
 
     // Fill with defaults
     for (int i = 0; i < 256; i++) {
-        m_voxelRegistry[i] = { "undefined", false, {1.0f, 0.0f, 1.0f} };
+        m_voxelRegistry[i] = 
+        { 
+            .name = "undefined", 
+            .color = {1.0f, 0.0f, 1.0f}, 
+            .solid = true, 
+            .destructible = true, 
+            .interactable = false, 
+            .flammable = false, 
+            .affectedByGravity = false 
+        };
     }
 
     // Voxel ID registry
-    m_voxelRegistry[0] = { "air",   false, {1.0f, 1.0f, 1.0f} };
-    m_voxelRegistry[1] = { "grass", true,  {0.0f, 0.43226f, 0.0f} };
-    m_voxelRegistry[2] = { "dirt",  true,  {0.3f, 0.15f, 0.0f} };
-    m_voxelRegistry[3] = { "stone", true,  {0.36508f, 0.36508f, 0.36508f} };
+    m_voxelRegistry[0] = 
+    { 
+        .name = "air", 
+        .color = {1.0f, 1.0f, 1.0f}, 
+        .solid = false,
+        .destructible = false,
+        .interactable = false,
+        .flammable = false,
+        .affectedByGravity = false
+    };
+    m_voxelRegistry[1] = 
+    { 
+        .name = "grass", 
+        .color = {0.0f, 0.43f, 0.0f}, 
+        .solid = true,
+        .destructible = true,
+        .interactable = false,
+        .flammable = false,
+        .affectedByGravity = false
+    };
+    m_voxelRegistry[2] = 
+    { 
+        .name = "dirt", 
+        .color = {0.30f, 0.15f, 0.0f}, 
+        .solid = true,
+        .destructible = true,
+        .interactable = false,
+        .flammable = false,
+        .affectedByGravity = false
+    };
+    m_voxelRegistry[3] = 
+    { 
+        .name = "stone", 
+        .color = {0.36f, 0.36f, 0.36f}, 
+        .solid = true,
+        .destructible = true,
+        .interactable = false,
+        .flammable = false,
+        .affectedByGravity = false
+    };
 }
 
-const Voxel::VoxelDataNew& Voxel::getVoxel(uint8_t voxelId) {
+const Voxel::VoxelData& Voxel::getVoxel(uint8_t voxelId) {
     init();
     return m_voxelRegistry[voxelId];
 }
@@ -49,12 +94,12 @@ glm::ivec3 Chunk::getOrigin()
     return m_origin;
 }
 
-void Chunk::SetVoxel(glm::ivec3 pos, const Voxel::VoxelData& vd)
+void Chunk::SetVoxel(glm::ivec3 pos, const Voxel::VoxelDataOld& vd)
 {
     m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = vd;
 }
 
-Voxel::VoxelData Chunk::GetVoxel(glm::ivec3 pos) const
+Voxel::VoxelDataOld Chunk::GetVoxel(glm::ivec3 pos) const
 {
     return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
 }
@@ -80,7 +125,7 @@ Chunk Voxel::GenerateTestChunk()
         {
             for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
             {
-                VoxelData vd;
+                VoxelDataOld vd;
                 if ((noiseData[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
                     vd = { 215, VoxelProperties_Solid, 0 };
                 else
