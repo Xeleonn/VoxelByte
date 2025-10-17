@@ -1,6 +1,6 @@
-﻿  voxel.cpp
+﻿  main.cpp
 G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
-  (compiling source file 'voxel.cpp')
+  (compiling source file 'main.cpp')
       G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
       see declaration of 'Chunk'
   

@@ -261,7 +261,6 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
                         dv[v] = h;
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
-
                         int v0 = chunkMesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
                         int v1 = chunkMesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
                         int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
