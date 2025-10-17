@@ -47,7 +47,7 @@ public:
     VoxelMesh GenerateChunkMesh2(Chunk chunk);
 
     void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-    void RenderMesh(VoxelMesh mesh, GLuint VAO);
+    void RenderMesh(const VoxelMesh& mesh, GLuint VAO);
     void FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
     static const float voxelColors[256][3];
 

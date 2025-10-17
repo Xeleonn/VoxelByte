@@ -309,7 +309,7 @@ void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VA
     glEnableVertexAttribArray(1);
 }
 
-void Voxel::RenderMesh(VoxelMesh mesh, GLuint VAO)
+void Voxel::RenderMesh(const VoxelMesh& mesh, GLuint VAO)
 {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
