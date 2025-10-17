@@ -1,18 +1,3 @@
-/*
-* 
-88888                                                                                                88888
-88  8b           d8                                   88  88888888ba                                    88
-88  `8b         d8'                                   88  88      "8b                 ,d                88
-88   `8b       d8'                                    88  88      ,8P                 88                88
-88    `8b     d8'  ,adPPYba,  8b,     ,d8  ,adPPYba,  88  88aaaaaa8P'  8b       d8  MM88MMM  ,adPPYba,  88
-88     `8b   d8'  a8"     "8a  `Y8, ,8P'  a8P_____88  88  88""""""8b,  `8b     d8'    88    a8P_____88  88
-88      `8b d8'   8b       d8    )888(    8PP"""""""  88  88      `8b   `8b   d8'     88    8PP"""""""  88
-88       `888'    "8a,   ,a8"  ,d8" "8b,  "8b,   ,aa  88  88      a8P    `8b,d8'      88,   "8b,   ,aa  88
-88        `8'      `"YbbdP"'  8P'     `Y8  `"Ybbd8"'  88  88888888P"       Y88'       "Y888  `"Ybbd8"'  88
-88888                                                                      d8'                       88888
-*                                                                          d8'
-*/
-
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -28,15 +13,14 @@
 #include "shader.h"
 #include "player.h"
 #include "voxel.h"
+#include "window.h"
+#include "gui.h"
 
 #include <iostream>
 #include <unordered_map>
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void mouseCallback(GLFWwindow* window, double xpos, double ypos);
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+// Function declarations
 void processInput(GLFWwindow* window);
-void updateImGui(GLFWwindow* window);
 
 // Initialize clock
 Clock gameClock;
@@ -45,9 +29,6 @@ Clock gameClock;
 Voxel voxel;
 
 // Settings
-const unsigned int WINDOW_WIDTH = 1920;
-const unsigned int WINDOW_HEIGHT = 1080;
-bool wireframeMode = false;
 float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 
 // Player
@@ -55,40 +36,19 @@ Player player;
 
 // Camera
 std::shared_ptr<Camera> pCamera = std::make_shared<Camera>(glm::vec3(Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE * 1.5f + 100.0f));
-float lastX = WINDOW_WIDTH / 2.0f;
-float lastY = WINDOW_HEIGHT / 2.0f;
-bool firstMouse = true;
 float viewDistance = 1000.0f;
 float cameraSpeed = pCamera->MovementSpeed;
 
+// GUI
+GUI gui(pCamera, gameClock);
+
 int main() {
 
-    // GLFW: Initialize and configure
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // Create window
+    Window window(1920, 1080, "VoxelByte");
 
-    // GLFW window creation
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "VoxelByte", NULL, NULL);
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    glfwSwapInterval(0);
-
-    // GLAD: Load all OpenGL function pointers
-    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-
-    // Initialize ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-    io.IniFilename = nullptr;
+    // Initialize ImGUI
+    gui.InitializeImGUI(window.GetGLFWwindow());
 
     // Vertex shader
     const char* vertexShaderSource
@@ -125,8 +85,6 @@ int main() {
     };
 
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE); // Optional: enable face culling if confident in winding order
-    // glCullFace(GL_BACK);
 
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
@@ -153,9 +111,9 @@ int main() {
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
 
     // Render loop
-    while (!glfwWindowShouldClose(window)) {
+    while (!window.ShouldClose()) {
         gameClock.Update();
-        processInput(window);
+        processInput(window.GetGLFWwindow());
 
         glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -166,31 +124,35 @@ int main() {
 
         ourShader.use();
 
-        // Pass projection matrix to shader
-        glm::mat4 projection = glm::perspective(glm::radians(pCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, viewDistance);
-        unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        // Projection
+        glm::mat4 projection = glm::perspective(glm::radians(pCamera->Zoom),
+            (float)window.GetWidth() / (float)window.GetHeight(),
+            0.1f, gui.GetViewDistance());
+        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"),
+            1, GL_FALSE, glm::value_ptr(projection));
 
-        // Camera/view transformation
+        // View
         glm::mat4 view = pCamera->GetViewMatrix();
-        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"),
+            1, GL_FALSE, glm::value_ptr(view));
 
+        // Model
         glm::mat4 model = glm::mat4(1.0f);
-        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
+            1, GL_FALSE, glm::value_ptr(model));
 
         pCamera->MovementSpeed = cameraSpeed;
 
         for (const Voxel::VoxelMesh& mesh : mesh_vec)
         voxel.RenderMesh(mesh, mesh.VAO);
 
-        updateImGui(window);
+        gui.UpdateImGui(window.GetGLFWwindow());
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.SwapBuffers();
+        window.PollEvents();
     }
 
     // Cleanup
@@ -202,7 +164,6 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwTerminate();
     return 0;
 }
 
@@ -214,7 +175,6 @@ void processInput(GLFWwindow* window) {
     else {
         if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            firstMouse = true;
         }
     }
 
@@ -236,94 +196,4 @@ void processInput(GLFWwindow* window) {
         pCamera->ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         pCamera->ProcessKeyboard(DOWN, deltaTime);
-}
-
-void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
-    // Only process mouse if cursor is disabled
-    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        float xpos = static_cast<float>(xposIn);
-        float ypos = static_cast<float>(yposIn);
-
-        if (firstMouse) {
-            lastX = xpos;
-            lastY = ypos;
-            firstMouse = false;
-        }
-
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos;
-
-        lastX = xpos;
-        lastY = ypos;
-
-        pCamera->ProcessMouseMovement(xoffset, yoffset);
-    }
-    else { // If cursor is normal, reset firstMouse so movement isn't jerky when re-disabling
-        firstMouse = true;
-    }
-}
-
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        pCamera->ProcessMouseScroll(static_cast<float>(yoffset));
-    }
-}
-
-void updateImGui(GLFWwindow* window) {
-    ImGui::SetNextWindowSize(ImVec2(305, WINDOW_HEIGHT));
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-    ImGui::Text("Time: %.2f s", gameClock.GetTime());
-    ImGui::Text("Delta Time: %.4f ms", gameClock.GetDeltaTime() * 1000.0f); // ms
-    ImGui::Text("%.1f FPS", gameClock.GetFPS());
-
-    ImGui::Separator();
-    ImGui::Text("Camera Position:");
-    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", pCamera->Position.x, pCamera->Position.y, pCamera->Position.z);
-    ImGui::Text("Yaw: %.1f, Pitch: %.1f", pCamera->Yaw, pCamera->Pitch);
-
-    ImGui::Separator();
-    if (ImGui::CollapsingHeader("Window")) {
-        const char* items[] = { "1280x720", "1600x900", "1920x1080", "2560x1140" };
-        static int currentItem = 2;
-        ImGui::Text("Window Size:");
-        if (ImGui::Combo("   ", &currentItem, items, IM_ARRAYSIZE(items)))
-        {
-            if (currentItem == 0)
-                glfwSetWindowSize(window, 1280, 720);
-            else if (currentItem == 1)
-                glfwSetWindowSize(window, 1600, 900);
-            else if (currentItem == 2)
-                glfwSetWindowSize(window, 1920, 1080);
-            else if (currentItem == 3)
-                glfwSetWindowSize(window, 2560, 1440);
-        }
-        ImGui::Separator();
-        ImGui::Checkbox(" Wireframe Meshes", &wireframeMode);
-        if (wireframeMode) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        ImGui::Separator();
-        ImGui::Text("glClearColor:");
-        ImGui::ColorEdit3(" ", clearColor);
-    }
-
-    ImGui::Separator();
-    if (ImGui::CollapsingHeader("Camera")) {
-        ImGui::Separator();
-        ImGui::Text("Speed:");
-        ImGui::SliderFloat(" ", &cameraSpeed, 1.0f, 1000.0f);
-        ImGui::Separator();
-        ImGui::Text("View Distance:");
-        ImGui::SliderFloat("  ", &viewDistance, 100.0f, 10000.0f);
-        ImGui::Spacing();
-    }
-    ImGui::End();
 }
