@@ -30,6 +30,7 @@
 #include "voxel.h"
 
 #include <iostream>
+#include <unordered_map>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -130,11 +131,26 @@ int main() {
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
     // Test chunk generation and mesh setup
-    Chunk testChunk = voxel.GenerateTestChunk();
-    Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
+    //Chunk testChunk(0, glm::ivec3(0, 0, 0));
+    //testChunk.GenerateChunk();
+    //Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
+    ChunkSystem chunk_sys(pCamera);
+    chunk_sys.update();
+
+    int iterator = 0;
+    std::vector<Voxel::VoxelMesh> mesh_vec;
+    for (const auto& id_chunk : chunk_sys.get_chunk_map())
+    {
+        Voxel::VoxelMesh curr_mesh = voxel.GenerateChunkMesh2(*(id_chunk.second));
+        mesh_vec.push_back(curr_mesh);
+        curr_mesh.VBO = iterator;
+        curr_mesh.EBO = iterator;
+        curr_mesh.VAO = iterator;
+        voxel.SetupRenderMesh(curr_mesh, curr_mesh.VBO, curr_mesh.EBO, curr_mesh.VAO);
+        iterator++;
+    }
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
-    voxel.SetupRenderMesh(testMesh, chunkVBO, chunkEBO, chunkVAO);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -166,7 +182,8 @@ int main() {
 
         pCamera->MovementSpeed = cameraSpeed;
 
-        voxel.RenderMesh(testMesh, chunkVAO);
+        for (const Voxel::VoxelMesh& mesh : mesh_vec)
+        voxel.RenderMesh(mesh, mesh.VAO);
 
         updateImGui(window);
         ImGui::Render();
@@ -177,9 +194,9 @@ int main() {
     }
 
     // Cleanup
-    if (chunkVAO != 0) {
-        voxel.FreeRenderMesh(testMesh, chunkVBO, chunkEBO, chunkVAO);
-    }
+    for (const Voxel::VoxelMesh& mesh : mesh_vec)
+        voxel.FreeRenderMesh(mesh, const_cast<GLuint&>(mesh.VBO), const_cast<GLuint&>(mesh.EBO), const_cast<GLuint&>(mesh.VAO));
+    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

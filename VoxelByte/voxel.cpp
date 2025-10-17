@@ -8,7 +8,6 @@
 
 Voxel::Voxel()
 {
-    m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
 bool Voxel::m_initialized = false;
@@ -87,6 +86,8 @@ Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
     m_origin = origin;
 
     m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+
+    m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
 glm::ivec3 Chunk::getOrigin()
@@ -104,40 +105,31 @@ uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
     return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
 }
 
-Chunk Voxel::GenerateTestChunk()
+void Chunk::GenerateChunk()
 {
-    std::vector<float> noiseData(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
-
-    Chunk newChunk(0, glm::ivec3(0, 0, 0));
-
-    size_t noise_idx = 0;
-    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
-    {
-        for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
-        {
-            noiseData[noise_idx++] = m_noise.GetNoise((float)x, (float)y);
-        }
-    }
+    if (m_generated == true) return;
+    m_generated = true;
 
     for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
     {
-        for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
+        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
         {
-            for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
+            float height_noise = m_noise.GetNoise(  static_cast<float>(m_origin.x + x),
+                                                    static_cast<float>(m_origin.z + z));
+
+            for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
             {
                 uint8_t v_id;
 
-                if ((noiseData[x * Chunk::CHUNK_SIZE + z] + 1.0f) * 64.0f > y)
+                if ((height_noise + 1.0f) * 64.0f > y)
                     v_id = 1;
                 else
                     v_id = 0;
 
-                newChunk.SetVoxel(glm::vec3(x, y, z), v_id);
+                SetVoxel(glm::vec3(x, y, z), v_id);
             }
         }
     }
-
-    return newChunk;
 }
 
 int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
@@ -160,6 +152,11 @@ void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
 Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 {
     VoxelMesh chunkMesh;
+
+    int ox = chunk.getOrigin().x;
+    int oy = chunk.getOrigin().y;
+    int oz = chunk.getOrigin().z;
+
     // Sweep over each axis (X, Y and Z)
     for (int d = 0; d < 3; d++)
     {
@@ -262,10 +259,10 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunkMesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
-                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
-                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
-                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
+                        int v0 = chunkMesh.AddVertex((float)(x[0] + ox), (float)(x[1] + oy), (float)(x[2] + oz), voxelId);
+                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0] + ox), (float)(x[1] + du[1] + oy), (float)(x[2] + du[2] + oz), voxelId);
+                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0] + ox), (float)(x[1] + dv[1] + oy), (float)(x[2] + dv[2] + oz), voxelId);
+                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0] + ox), (float)(x[1] + du[1] + dv[1] + oy), (float)(x[2] + du[2] + dv[2] + oz), voxelId);
                         chunkMesh.AddIndex(v0, v1, v2);
                         chunkMesh.AddIndex(v1, v2, v3);
 
@@ -329,6 +326,55 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     VBO = 0;
     EBO = 0;
 }
+
+ChunkSystem::ChunkSystem(std::shared_ptr<Camera> camera)
+{
+    m_camera = camera;
+}
+
+void ChunkSystem::update()
+{
+    // get nearest chunk indices in range
+    nearest_chunk_idx = glm::ivec2( static_cast<float>(m_camera->Position.x / Chunk::CHUNK_SIZE),
+                                    static_cast<float>(m_camera->Position.z / Chunk::CHUNK_SIZE));
+    
+    for (int x = -m_chunk_gen_radius; x < m_chunk_gen_radius; x++)
+    {
+        for (int z = -m_chunk_gen_radius; z < m_chunk_gen_radius; z++)
+        {
+            glm::ivec2 pawsible_chunk_idx(  nearest_chunk_idx.x + x,
+                                            nearest_chunk_idx.y + z);
+
+            if (glm::distance(glm::vec2(nearest_chunk_idx), glm::vec2(pawsible_chunk_idx)) > static_cast<float>(m_chunk_gen_radius)) continue;
+
+            ChunkID curr_id = chunk_idx_id(pawsible_chunk_idx);
+            std::shared_ptr<Chunk> curr_chunk = std::make_unique<Chunk>(curr_id, glm::ivec3(chunk_idx_to_origin(pawsible_chunk_idx).x, 0, chunk_idx_to_origin(pawsible_chunk_idx).y));
+            curr_chunk->GenerateChunk();
+            m_chunk_list.insert({curr_id, curr_chunk});
+        }
+    }
+}
+
+const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& ChunkSystem::get_chunk_map() const
+{
+    return m_chunk_list;
+}
+
+glm::ivec2 ChunkSystem::chunk_idx_to_origin(glm::ivec2 chunk_idx)
+{
+    return glm::ivec2(  chunk_idx.x * Chunk::CHUNK_SIZE,
+                        chunk_idx.y * Chunk::CHUNK_SIZE);
+}
+
+inline ChunkID ChunkSystem::chunk_idx_id(glm::ivec2 chunk_idx)
+{
+    ChunkID id;
+    id = chunk_idx.x;
+    id = id << 32;
+    id = id | chunk_idx.y;
+    return id;
+}
+
 
 const float Voxel::voxelColors[256][3] = {
     // --- Red (Bright to Dark) ---
