@@ -1,7 +1,10 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "globals.h"
+
 #include "camera.h"
+#include "logger.h"
 #include <memory>
 #include <iostream>
 #include <string>
@@ -18,7 +21,7 @@ public:
         playerCamera = camera;
     }
 
-    std::string name = "Russianhecker";
+    std::string name = "Player";
     glm::vec3 position;
 
 private:

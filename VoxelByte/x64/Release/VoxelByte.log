@@ -1,20 +1,7 @@
-﻿  main.cpp
-G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
-  (compiling source file 'main.cpp')
-      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
-      see declaration of 'Chunk'
-  
-  voxel.cpp
-G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
-  (compiling source file 'voxel.cpp')
-      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
-      see declaration of 'Chunk'
-  
-G:\dev\repos\VoxelByte\VoxelByte\voxel.cpp(151,34): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-G:\dev\repos\VoxelByte\VoxelByte\voxel.cpp(318,51): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+﻿  window.cpp
   Generating code
-  0 of 2361 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  212 of 2578 functions ( 8.2%) were compiled, the rest were copied from previous compilation.
+    4 functions were new in current compilation
+    112 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe

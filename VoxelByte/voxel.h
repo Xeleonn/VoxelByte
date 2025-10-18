@@ -1,6 +1,8 @@
 #ifndef VOXEL_H
 #define VOXEL_H
 
+#include "globals.h"
+
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <string>
@@ -80,7 +82,7 @@ private:
 
 class ChunkSystem {
 public:
-    ChunkSystem(std::shared_ptr<Camera> camera);
+    ChunkSystem();
     static const int WORLD_CHUNK_RADIUS = 2048;
     static const int CHUNK_HEIGHT = 1;
 

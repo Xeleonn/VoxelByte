@@ -7,6 +7,10 @@ G:\dev\repos\VoxelByte\include\imgui\imgui_impl_opengl3.cpp;G:\dev\repos\VoxelBy
 G:\dev\repos\VoxelByte\include\imgui\imgui_tables.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\imgui_tables.obj
 G:\dev\repos\VoxelByte\include\imgui\imgui_widgets.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\imgui_widgets.obj
 G:\dev\repos\VoxelByte\VoxelByte\clock.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\clock.obj
+G:\dev\repos\VoxelByte\VoxelByte\globals.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\globals.obj
+G:\dev\repos\VoxelByte\VoxelByte\gui.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\gui.obj
+G:\dev\repos\VoxelByte\VoxelByte\logger.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\logger.obj
+G:\dev\repos\VoxelByte\VoxelByte\window.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\window.obj
 G:\dev\repos\VoxelByte\VoxelByte\main.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\main.obj
 G:\dev\repos\VoxelByte\VoxelByte\player.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\player.obj
 G:\dev\repos\VoxelByte\VoxelByte\voxel.cpp;G:\dev\repos\VoxelByte\VoxelByte\x64\Release\voxel.obj

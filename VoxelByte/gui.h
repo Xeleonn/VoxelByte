@@ -1,6 +1,8 @@
 #ifndef GUI_H
 #define GUI_H
 
+#include "globals.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -13,7 +15,7 @@
 class GUI
 {
 public:
-    GUI(std::shared_ptr<Camera> camera, Clock& clock);
+    GUI(Camera& camera, Clock& clock);
     ~GUI();
 
     void InitializeImGUI(GLFWwindow* window);
@@ -26,7 +28,6 @@ public:
     float cameraSpeed = 100.0f;
 
 private:
-    std::shared_ptr<Camera> pCamera;
     Clock& gameClock;
 };
 

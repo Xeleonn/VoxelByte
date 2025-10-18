@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-GUI::GUI(std::shared_ptr<Camera> camera, Clock& clock) : pCamera(camera), gameClock(clock)
+GUI::GUI(Camera& camera, Clock& clock) : gameClock(clock)
 {
 }
 
@@ -17,6 +17,8 @@ void GUI::InitializeImGUI(GLFWwindow* window)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     io.IniFilename = nullptr;
+
+    logger.Print("ImGUI initialized");
 }
 
 void GUI::UpdateImGui(GLFWwindow* window)
@@ -31,8 +33,8 @@ void GUI::UpdateImGui(GLFWwindow* window)
 
     ImGui::Separator();
     ImGui::Text("Camera Position:");
-    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", pCamera->Position.x, pCamera->Position.y, pCamera->Position.z);
-    ImGui::Text("Yaw: %.1f, Pitch: %.1f", pCamera->Yaw, pCamera->Pitch);
+    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", camera.Position.x, camera.Position.y, camera.Position.z);
+    ImGui::Text("Yaw: %.1f, Pitch: %.1f", camera.Yaw, camera.Pitch);
 
     ImGui::Separator();
     if (ImGui::CollapsingHeader("Window")) {
@@ -66,7 +68,7 @@ void GUI::UpdateImGui(GLFWwindow* window)
         ImGui::Separator();
         ImGui::Text("Speed:");
         ImGui::SliderFloat(" ", &cameraSpeed, 1.0f, 1000.0f);
-        pCamera->MovementSpeed = cameraSpeed;
+        camera.MovementSpeed = cameraSpeed;
         ImGui::Separator();
         ImGui::Text("View Distance:");
         ImGui::SliderFloat("  ", &viewDistance, 100.0f, 10000.0f);

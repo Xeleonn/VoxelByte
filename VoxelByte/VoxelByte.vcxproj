@@ -140,7 +140,9 @@
     <ClCompile Include="..\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="clock.cpp" />
+    <ClCompile Include="globals.cpp" />
     <ClCompile Include="gui.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="player.cpp" />
@@ -159,7 +161,9 @@
     <ClInclude Include="..\include\imgui\imstb_truetype.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="clock.h" />
+    <ClInclude Include="globals.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="voxel.h" />

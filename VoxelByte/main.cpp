@@ -9,12 +9,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "globals.h"
+
 #include "clock.h"
 #include "shader.h"
 #include "player.h"
 #include "voxel.h"
 #include "window.h"
 #include "gui.h"
+#include "logger.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -35,12 +38,11 @@ float clearColor[3] = { 0.7f, 0.7f, 1.0f };
 Player player;
 
 // Camera
-std::shared_ptr<Camera> pCamera = std::make_shared<Camera>(glm::vec3(Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE / 2, Chunk::CHUNK_SIZE * 1.5f + 100.0f));
 float viewDistance = 1000.0f;
-float cameraSpeed = pCamera->MovementSpeed;
+float cameraSpeed = camera.MovementSpeed;
 
 // GUI
-GUI gui(pCamera, gameClock);
+GUI gui(camera, gameClock);
 
 int main() {
 
@@ -92,7 +94,7 @@ int main() {
     //Chunk testChunk(0, glm::ivec3(0, 0, 0));
     //testChunk.GenerateChunk();
     //Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
-    ChunkSystem chunk_sys(pCamera);
+    ChunkSystem chunk_sys;
     chunk_sys.update();
 
     int iterator = 0;
@@ -125,14 +127,14 @@ int main() {
         ourShader.use();
 
         // Projection
-        glm::mat4 projection = glm::perspective(glm::radians(pCamera->Zoom),
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)window.GetWidth() / (float)window.GetHeight(),
             0.1f, gui.GetViewDistance());
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"),
             1, GL_FALSE, glm::value_ptr(projection));
 
         // View
-        glm::mat4 view = pCamera->GetViewMatrix();
+        glm::mat4 view = camera.GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"),
             1, GL_FALSE, glm::value_ptr(view));
 
@@ -141,7 +143,7 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
             1, GL_FALSE, glm::value_ptr(model));
 
-        pCamera->MovementSpeed = cameraSpeed;
+        camera.MovementSpeed = cameraSpeed;
 
         for (const Voxel::VoxelMesh& mesh : mesh_vec)
         voxel.RenderMesh(mesh, mesh.VAO);
@@ -185,15 +187,15 @@ void processInput(GLFWwindow* window) {
     // Camera movement
     float deltaTime = float(gameClock.GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(BACKWARD, deltaTime);
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(LEFT, deltaTime);
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(RIGHT, deltaTime);
+        camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(UP, deltaTime);
+        camera.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        pCamera->ProcessKeyboard(DOWN, deltaTime);
+        camera.ProcessKeyboard(DOWN, deltaTime);
 }

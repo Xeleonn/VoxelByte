@@ -1,0 +1,19 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
+#include <chrono>
+#include <string>
+#include <iostream>
+
+class Logger
+{
+public:
+	Logger();
+
+	std::string GetCurrentTime();
+
+	void Print(std::string message);
+};
+
+#endif
+

@@ -1,8 +1,6 @@
 #include "window.h"
 #include "camera.h"
 
-extern std::shared_ptr<Camera> pCamera;
-
 Window::Window(int width, int height, const char* title)
     : m_width(width), m_height(height)
 {
@@ -29,11 +27,14 @@ Window::Window(int width, int height, const char* title)
     // Initialize mouse starting position
     lastX = m_width / 2.0f;
     lastY = m_height / 2.0f;
+
+    logger.Print("Window created");
 }
 
 Window::~Window() {
     if (m_window) {
         glfwDestroyWindow(m_window);
+        logger.Print("Window destroyed");
     }
     glfwTerminate();
 }
@@ -77,9 +78,7 @@ void Window::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
         self->lastX = xpos;
         self->lastY = ypos;
 
-        if (pCamera) {
-            pCamera->ProcessMouseMovement(xoffset, yoffset);
-        }
+        camera.ProcessMouseMovement(xoffset, yoffset);
     }
     else {
         self->firstMouse = true;
@@ -88,8 +87,6 @@ void Window::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
 
 void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        if (pCamera) {
-            pCamera->ProcessMouseScroll(static_cast<float>(yoffset));
-        }
+        camera.ProcessMouseScroll(static_cast<float>(yoffset));
     }
 }

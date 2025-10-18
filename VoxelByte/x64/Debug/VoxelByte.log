@@ -1,9 +1,7 @@
-﻿  gui.cpp
-  main.cpp
-G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
+﻿  main.cpp
+G:\dev\repos\VoxelByte\VoxelByte\voxel.h(64,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
   (compiling source file 'main.cpp')
-      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(60,7):
+      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(64,7):
       see declaration of 'Chunk'
   
-  Generating Code...
   VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Debug\VoxelByte.exe

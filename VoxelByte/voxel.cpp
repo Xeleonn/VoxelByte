@@ -327,16 +327,15 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     EBO = 0;
 }
 
-ChunkSystem::ChunkSystem(std::shared_ptr<Camera> camera)
+ChunkSystem::ChunkSystem()
 {
-    m_camera = camera;
 }
 
 void ChunkSystem::update()
 {
     // get nearest chunk indices in range
-    nearest_chunk_idx = glm::ivec2( static_cast<float>(m_camera->Position.x / Chunk::CHUNK_SIZE),
-                                    static_cast<float>(m_camera->Position.z / Chunk::CHUNK_SIZE));
+    nearest_chunk_idx = glm::ivec2( static_cast<float>(camera.Position.x / Chunk::CHUNK_SIZE),
+                                    static_cast<float>(camera.Position.z / Chunk::CHUNK_SIZE));
     
     for (int x = -m_chunk_gen_radius; x < m_chunk_gen_radius; x++)
     {

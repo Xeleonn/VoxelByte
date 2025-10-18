@@ -2,5 +2,5 @@
 
 Player::Player()
 {
-	std::cout << "Player '" << name << "' has spawned!\n";
+	logger.Print(name + " has spawned");
 }
