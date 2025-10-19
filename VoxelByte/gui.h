@@ -25,9 +25,6 @@ public:
 
     void SetupCrosshairMesh();
 
-    const char* crosshairVertexShaderSource;
-    const char* crosshairFragmentShaderSource;
-
     GLuint crosshairVAO, crosshairVBO, crosshairEBO;
 
 private:
