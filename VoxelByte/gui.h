@@ -2,7 +2,6 @@
 #define GUI_H
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -24,7 +23,15 @@ public:
     float viewDistance = 1000.0f;
     float cameraSpeed = 100.0f;
 
+    void SetupCrosshairMesh();
+
+    const char* crosshairVertexShaderSource;
+    const char* crosshairFragmentShaderSource;
+
+    GLuint crosshairVAO, crosshairVBO, crosshairEBO;
+
 private:
+
 };
 
 #endif
