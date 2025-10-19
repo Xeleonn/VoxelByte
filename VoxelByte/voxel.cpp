@@ -319,6 +319,7 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
 
 MultiChunkSystem::MultiChunkSystem()
 {
+    VB::inst().GetLogger()->Print("MultiChunk obj constructed");
 }
 
 void MultiChunkSystem::update()

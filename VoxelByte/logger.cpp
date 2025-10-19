@@ -27,7 +27,7 @@ std::string Logger::GetCurrentTime()
 
     // Extract centiseconds (2 decimals)
     auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
-    int centiseconds = ms.count() / 10;
+    int centiseconds = static_cast<int>(ms.count() / 10);
 
     oss << '.' << std::setw(2) << std::setfill('0') << centiseconds;
 
