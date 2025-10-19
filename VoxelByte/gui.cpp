@@ -2,6 +2,7 @@
 
 GUI::GUI()
 {
+    VB::inst().GetLogger()->Print("GUI obj constructed");
 }
 
 float crosshairVertices[] = {
@@ -60,14 +61,22 @@ void GUI::UpdateImGui(GLFWwindow* window)
         ImGui::Text("Window Size:");
         if (ImGui::Combo("   ", &currentItem, items, IM_ARRAYSIZE(items)))
         {
-            if (currentItem == 0)
+            if (currentItem == 0) {
                 glfwSetWindowSize(window, 1280, 720);
-            else if (currentItem == 1)
+                VB::inst().GetLogger()->Print("Set window size to 1280 x 720");
+            }
+            else if (currentItem == 1) {
                 glfwSetWindowSize(window, 1600, 900);
-            else if (currentItem == 2)
+                VB::inst().GetLogger()->Print("Set window size to 1600 x 900");
+            }
+            else if (currentItem == 2) {
                 glfwSetWindowSize(window, 1920, 1080);
-            else if (currentItem == 3)
+                VB::inst().GetLogger()->Print("Set window size to 1920 x 1080");
+            }
+            else if (currentItem == 3) {
                 glfwSetWindowSize(window, 2560, 1440);
+                VB::inst().GetLogger()->Print("Set window size to 2560 x 1440");
+            }
         }
 
         ImGui::Separator();

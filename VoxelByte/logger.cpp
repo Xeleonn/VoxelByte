@@ -2,6 +2,7 @@
 
 Logger::Logger()
 {
+    VB::inst().GetLogger()->Print("Logger obj constructed");
 }
 
 std::string Logger::GetCurrentTime()

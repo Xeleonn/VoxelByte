@@ -7,6 +7,7 @@ Clock::Clock()
     init_tick = current_tick;
     delta_time = 0;
     time = 0;
+    VB::inst().GetLogger()->Print("Clock obj constructed");
 }
 
 void Clock::Update()

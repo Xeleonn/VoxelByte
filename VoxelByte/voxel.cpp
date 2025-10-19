@@ -2,6 +2,7 @@
 
 Voxel::Voxel()
 {
+    VB::inst().GetLogger()->Print("Voxel obj constructed");
 }
 
 bool Voxel::m_initialized = false;
@@ -80,6 +81,7 @@ Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
     m_origin = origin;
 
     m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+    VB::inst().GetLogger()->Print("Chunk obj constructed");
 }
 
 glm::ivec3 Chunk::getOrigin()

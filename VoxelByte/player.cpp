@@ -2,5 +2,5 @@
 
 Player::Player()
 {
-	VB::inst().GetLogger()->Print(name + " has spawned");
+	VB::inst().GetLogger()->Print("Player obj constructed");
 }
