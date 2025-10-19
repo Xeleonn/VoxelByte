@@ -27,7 +27,7 @@ Window::Window(int width, int height, const char* title)
     lastX = m_width / 2.0f;
     lastY = m_height / 2.0f;
 
-    VB::inst().GetLogger()->Print("Window created");
+    VB::inst().GetLogger()->Print("Window obj constructed");
 }
 
 Window::~Window() {

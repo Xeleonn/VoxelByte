@@ -17,9 +17,6 @@
 #include <iostream>
 #include <unordered_map>
 
-// Function declarations
-void processInput(GLFWwindow* window);
-
 int main() {
 
     // Initialize Global Class
@@ -96,7 +93,6 @@ int main() {
 
     // Cleanup
     VB::inst().GetVoxel()->FreeRenderMeshes();
-    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

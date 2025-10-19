@@ -2,6 +2,7 @@
 
 Input::Input()
 {
+    VB::inst().GetLogger()->Print("Input obj constructed");
 }
 
 void Input::ProcessInput(GLFWwindow* window) {

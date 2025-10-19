@@ -129,7 +129,7 @@ public:
 
 private:
     int m_seed = 6;
-    float m_freq = 0.2;
+    float m_freq = 0.2f;
     FastNoiseLite m_noise;
     
 };

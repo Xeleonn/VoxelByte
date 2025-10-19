@@ -4,6 +4,7 @@
 
 VoxelRenderer::VoxelRenderer()
 {
+    VB::inst().GetLogger()->Print("Voxel obj constructed");
 }
 
 bool VoxelRenderer::m_initialized = false;
@@ -73,6 +74,57 @@ void VoxelRenderer::init() {
 const VoxelRenderer::VoxelData& VoxelRenderer::GetVoxelData(uint8_t voxelId) {
     init();
     return m_voxelRegistry[voxelId];
+}
+
+// ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
+Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
+{
+    m_chunkID = CID;
+    m_origin = origin;
+
+    m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+    VB::inst().GetLogger()->Print("Chunk obj constructed");
+}
+
+glm::ivec3 Chunk::getOrigin()
+{
+    return m_origin;
+}
+
+void Chunk::SetVoxel(glm::ivec3 pos, const uint8_t& id)
+{
+    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = id;
+}
+
+uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
+{
+    return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
+}
+
+void Chunk::GenerateChunk()
+{
+    if (m_generated == true) return;
+    m_generated = true;
+
+    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
+    {
+        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
+        {
+            float height_noise = VB::inst().GetNoiseGenerator()->GetNoise().GetNoise(static_cast<float>(m_origin.x + x), static_cast<float>(m_origin.z + z));
+
+            for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
+            {
+                uint8_t v_id;
+
+                if ((height_noise + 1.0f) * 32.0f > y)
+                    v_id = 1;
+                else
+                    v_id = 0;
+
+                SetVoxel(glm::vec3(x, y, z), v_id);
+            }
+        }
+    }
 }
 
 int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
@@ -229,7 +281,7 @@ VoxelRenderer::VoxelMesh VoxelRenderer::GenerateChunkMesh(Chunk chunk)
         }
     }
 
-    std::cout<<"chunk mesh generated. vtx: "<<chunkMesh.vertices.size()<<" idx: "<<chunkMesh.indices.size()<<"\n";
+    VB::inst().GetLogger()->Print("Chunk mesh generated. Vtx: " + std::to_string(chunkMesh.vertices.size()) + " Idx: " + std::to_string(chunkMesh.indices.size()));
     return chunkMesh;
 }
 
@@ -373,6 +425,7 @@ void Chunk::GenerateChunk()
 // ----------<[ MULTICHUNK CLASS IMPLEMENTATION ]>----------
 MultiChunkSystem::MultiChunkSystem()
 {
+    VB::inst().GetLogger()->Print("MultiChunk obj constructed");
 }
 
 void MultiChunkSystem::update()
@@ -395,8 +448,8 @@ void MultiChunkSystem::update()
             curr_chunk->GenerateChunk();
             m_chunk_list.insert({curr_id, std::move(curr_chunk)});
 
-            std::cout<<"chunk id: "<<curr_id<<" x: "<<pawsible_chunk_idx.x<<" y: "<<pawsible_chunk_idx.y<<"\n";
-            std::cout<<"origin x: "<<chunk_idx_to_origin(pawsible_chunk_idx).x<<" z: "<<chunk_idx_to_origin(pawsible_chunk_idx).y<<"\n";
+            VB::inst().GetLogger()->Print("ChunkId: " + std::to_string(curr_id) + " X: " + std::to_string(pawsible_chunk_idx.x) + " Y: " + std::to_string(pawsible_chunk_idx.y));
+            VB::inst().GetLogger()->Print("Origin X: " + std::to_string(chunk_idx_to_origin(pawsible_chunk_idx).x) + " Z: " + std::to_string(chunk_idx_to_origin(pawsible_chunk_idx).y));
         }
     }
 }
