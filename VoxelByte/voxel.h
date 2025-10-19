@@ -41,6 +41,7 @@ public:
         std::vector<unsigned int> indices;
 
         GLuint VBO, EBO, VAO;
+        glm::vec3 mesh_offset;
 
         int AddVertex(float x, float y, float z, uint8_t id);
         void AddIndex(int v0, int v1, int v2);
@@ -87,12 +88,12 @@ public:
     static const int CHUNK_HEIGHT = 1;
 
     void update();
+    glm::ivec2 pos_to_nearest_chunk_idx(glm::vec3 camera_position);
     const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& get_chunk_map() const;
     
 private:
-    int m_chunk_gen_radius = 3;
+    int m_chunk_gen_radius = 2;
 
-    glm::ivec2 nearest_chunk_idx;
     glm::ivec2 chunk_idx_to_origin(glm::ivec2 chunk_idx);
     inline ChunkID chunk_idx_id(glm::ivec2 chunk_idx);
 

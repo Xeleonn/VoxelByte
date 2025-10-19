@@ -62,8 +62,9 @@ int main() {
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
+    "uniform vec3 pos_offset;\n"
     "void main() {\n"
-    "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+    "   gl_Position = projection * view * model * vec4(aPos + pos_offset, 1.0);\n"
     "   ourColor = aColor;\n"
     "}\0"
     };
@@ -86,7 +87,8 @@ int main() {
     "}\n\0"
     };
 
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_CULL_FACE);
 
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
 
@@ -97,7 +99,7 @@ int main() {
     ChunkSystem chunk_sys;
     chunk_sys.update();
 
-    int iterator = 0;
+    int iterator = 5226;
     std::vector<Voxel::VoxelMesh> mesh_vec;
     for (const auto& id_chunk : chunk_sys.get_chunk_map())
     {
@@ -106,6 +108,9 @@ int main() {
         curr_mesh.VBO = iterator;
         curr_mesh.EBO = iterator;
         curr_mesh.VAO = iterator;
+        curr_mesh.mesh_offset = glm::vec3(  static_cast<float>(id_chunk.second->getOrigin().x),
+                                            static_cast<float>(id_chunk.second->getOrigin().y),
+                                            static_cast<float>(id_chunk.second->getOrigin().z));
         voxel.SetupRenderMesh(curr_mesh, curr_mesh.VBO, curr_mesh.EBO, curr_mesh.VAO);
         iterator++;
     }
@@ -143,10 +148,19 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
             1, GL_FALSE, glm::value_ptr(model));
 
+        
+
         camera.MovementSpeed = cameraSpeed;
 
         for (const Voxel::VoxelMesh& mesh : mesh_vec)
-        voxel.RenderMesh(mesh, mesh.VAO);
+        {
+            glUniform3f(glGetUniformLocation(ourShader.ID, "pos_offset"),
+                        mesh.mesh_offset.x,
+                        mesh.mesh_offset.y,
+                        mesh.mesh_offset.z);
+                        
+            voxel.RenderMesh(mesh, mesh.VAO);
+        }
 
         gui.UpdateImGui(window.GetGLFWwindow());
 

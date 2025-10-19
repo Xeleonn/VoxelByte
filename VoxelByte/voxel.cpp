@@ -153,10 +153,6 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 {
     VoxelMesh chunkMesh;
 
-    int ox = chunk.getOrigin().x;
-    int oy = chunk.getOrigin().y;
-    int oz = chunk.getOrigin().z;
-
     // Sweep over each axis (X, Y and Z)
     for (int d = 0; d < 3; d++)
     {
@@ -259,10 +255,10 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                         // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
 
-                        int v0 = chunkMesh.AddVertex((float)(x[0] + ox), (float)(x[1] + oy), (float)(x[2] + oz), voxelId);
-                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0] + ox), (float)(x[1] + du[1] + oy), (float)(x[2] + du[2] + oz), voxelId);
-                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0] + ox), (float)(x[1] + dv[1] + oy), (float)(x[2] + dv[2] + oz), voxelId);
-                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0] + ox), (float)(x[1] + du[1] + dv[1] + oy), (float)(x[2] + du[2] + dv[2] + oz), voxelId);
+                        int v0 = chunkMesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
+                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
+                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
+                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
                         chunkMesh.AddIndex(v0, v1, v2);
                         chunkMesh.AddIndex(v1, v2, v3);
 
@@ -285,6 +281,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         }
     }
 
+    std::cout<<"chunk mesh generated. vtx: "<<chunkMesh.vertices.size()<<" idx: "<<chunkMesh.indices.size()<<"\n";
     return chunkMesh;
 }
 
@@ -312,7 +309,7 @@ void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VA
 void Voxel::RenderMesh(const VoxelMesh& mesh, GLuint VAO)
 {
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
@@ -334,8 +331,8 @@ ChunkSystem::ChunkSystem()
 void ChunkSystem::update()
 {
     // get nearest chunk indices in range
-    nearest_chunk_idx = glm::ivec2( static_cast<float>(camera.Position.x / Chunk::CHUNK_SIZE),
-                                    static_cast<float>(camera.Position.z / Chunk::CHUNK_SIZE));
+    glm::ivec2 nearest_chunk_idx;
+    nearest_chunk_idx = pos_to_nearest_chunk_idx(camera.Position);
     
     for (int x = -m_chunk_gen_radius; x < m_chunk_gen_radius; x++)
     {
@@ -344,14 +341,28 @@ void ChunkSystem::update()
             glm::ivec2 pawsible_chunk_idx(  nearest_chunk_idx.x + x,
                                             nearest_chunk_idx.y + z);
 
-            if (glm::distance(glm::vec2(nearest_chunk_idx), glm::vec2(pawsible_chunk_idx)) > static_cast<float>(m_chunk_gen_radius)) continue;
+            //if (glm::distance(glm::vec2(nearest_chunk_idx), glm::vec2(pawsible_chunk_idx)) > static_cast<float>(m_chunk_gen_radius)) continue;
 
             ChunkID curr_id = chunk_idx_id(pawsible_chunk_idx);
             std::shared_ptr<Chunk> curr_chunk = std::make_unique<Chunk>(curr_id, glm::ivec3(chunk_idx_to_origin(pawsible_chunk_idx).x, 0, chunk_idx_to_origin(pawsible_chunk_idx).y));
             curr_chunk->GenerateChunk();
             m_chunk_list.insert({curr_id, curr_chunk});
+
+            std::cout<<"chunkid: "<<curr_id<<" x: "<<pawsible_chunk_idx.x<<" y: "<<pawsible_chunk_idx.y<<"\n";
+            std::cout<<"origin x: "<<chunk_idx_to_origin(pawsible_chunk_idx).x<<" z: "<<chunk_idx_to_origin(pawsible_chunk_idx).y<<"\n";
         }
     }
+}
+
+glm::ivec2 ChunkSystem::pos_to_nearest_chunk_idx(glm::vec3 camera_position)
+{
+    glm::ivec2 idx;
+    if (camera_position.x < 0.0f) idx.x = ((camera_position.x - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.x = (camera_position.x / Chunk::CHUNK_SIZE);
+    if (camera_position.z < 0.0f) idx.y = ((camera_position.z - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.y = (camera_position.z / Chunk::CHUNK_SIZE);
+
+    return idx;
 }
 
 const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& ChunkSystem::get_chunk_map() const
