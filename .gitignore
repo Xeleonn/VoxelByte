@@ -12,3 +12,6 @@ x64/Debug/VoxelByte.pdb
 x64/Debug/VoxelByte.exe
 Output/VoxelByte.exe
 .vscode/settings.json
+VoxelByte/VoxelByte.vcxproj
+VoxelByte/VoxelByte.vcxproj.filters
+VoxelByte/VoxelByte.vcxproj.user

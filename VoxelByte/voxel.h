@@ -84,7 +84,7 @@ class Chunk
 public:
     static const int CHUNK_SIZE = 64;
 
-    Chunk(ChunkID CID, glm::ivec3 origin);
+    Chunk(ChunkID chunk_id, glm::ivec3 origin);
     void GenerateChunk();
     glm::ivec3 getOrigin();
     inline void SetVoxel(glm::ivec3 pos, const uint8_t& vd);

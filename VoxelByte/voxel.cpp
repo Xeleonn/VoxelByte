@@ -1,10 +1,9 @@
 #include "globals.h"
 
-// ----------<[ VOXELDATA CLASS IMPLEMENTATION ]>----------
-
+// ----------<[ VOXELRENDERER CLASS IMPLEMENTATION ]>----------
 VoxelRenderer::VoxelRenderer()
 {
-    VB::inst().GetLogger()->Print("Voxel obj constructed");
+    VB::inst().GetLogger()->Print("VoxelRenderer obj constructed");
 }
 
 bool VoxelRenderer::m_initialized = false;
@@ -74,57 +73,6 @@ void VoxelRenderer::init() {
 const VoxelRenderer::VoxelData& VoxelRenderer::GetVoxelData(uint8_t voxelId) {
     init();
     return m_voxelRegistry[voxelId];
-}
-
-// ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
-Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
-{
-    m_chunkID = CID;
-    m_origin = origin;
-
-    m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
-    VB::inst().GetLogger()->Print("Chunk obj constructed");
-}
-
-glm::ivec3 Chunk::getOrigin()
-{
-    return m_origin;
-}
-
-void Chunk::SetVoxel(glm::ivec3 pos, const uint8_t& id)
-{
-    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = id;
-}
-
-uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
-{
-    return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
-}
-
-void Chunk::GenerateChunk()
-{
-    if (m_generated == true) return;
-    m_generated = true;
-
-    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
-    {
-        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
-        {
-            float height_noise = VB::inst().GetNoiseGenerator()->GetNoise().GetNoise(static_cast<float>(m_origin.x + x), static_cast<float>(m_origin.z + z));
-
-            for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
-            {
-                uint8_t v_id;
-
-                if ((height_noise + 1.0f) * 32.0f > y)
-                    v_id = 1;
-                else
-                    v_id = 0;
-
-                SetVoxel(glm::vec3(x, y, z), v_id);
-            }
-        }
-    }
 }
 
 int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
@@ -373,12 +321,13 @@ void VoxelRenderer::FreeRenderMeshes()
 }
 
 // ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
-Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
+Chunk::Chunk(ChunkID chunk_id, glm::ivec3 origin)
 {
-    m_chunkID = CID;
+    m_chunkID = chunk_id;
     m_origin = origin;
 
     m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+    VB::inst().GetLogger()->Print("Chunk obj with id: " + std::to_string(chunk_id) + " constructed");
 }
 
 glm::ivec3 Chunk::getOrigin()
@@ -491,6 +440,7 @@ const glm::ivec3 MultiChunkSystem::GetChunkOrigin(const ChunkID& chunk_id)
     else return m_chunk_list.at(chunk_id)->getOrigin();
 }
 
+// ----------<[ NOISEGENERATOR CLASS IMPLEMENTATION ]>----------
 NoiseGenerator::NoiseGenerator()
 {
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
