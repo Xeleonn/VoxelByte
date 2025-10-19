@@ -1,10 +1,10 @@
-#include "input.h"
+#include "globals.h"
 
 Input::Input()
 {
 }
 
-void Input::ProcessInput(GLFWwindow* window, Clock gameClock) {
+void Input::ProcessInput(GLFWwindow* window) {
     // Control cursor visibility with Right Mouse Button
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -20,17 +20,17 @@ void Input::ProcessInput(GLFWwindow* window, Clock gameClock) {
         glfwSetWindowShouldClose(window, true);
 
     // Camera movement
-    float deltaTime = float(gameClock.GetDeltaTime());
+    float deltaTime = float(VB::inst().GetClock()->GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(DOWN, deltaTime);
 }

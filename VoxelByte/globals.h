@@ -7,6 +7,7 @@
 #include "clock.h"
 #include "player.h"
 #include "gui.h"
+#include "input.h"
 
 #include <memory>
 
@@ -25,6 +26,7 @@ public:
     std::shared_ptr<Clock>              GetClock()              { return m_clock; }
     std::shared_ptr<Player>             GetPlayer()             { return m_player; }
     std::shared_ptr<GUI>                GetGUI()                { return m_gui; }
+    std::shared_ptr<Input>              GetInput()              { return m_input; }
 
 private:
     static VB m_voxelbyte_inst;
@@ -37,6 +39,7 @@ private:
     std::shared_ptr<Clock>              m_clock;
     std::shared_ptr<Player>             m_player;
     std::shared_ptr<GUI>                m_gui;
+    std::shared_ptr<Input>              m_input;
 };
 
 #endif

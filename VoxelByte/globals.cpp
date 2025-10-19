@@ -10,6 +10,7 @@ void VB::init()
     m_clock = std::make_shared<Clock>();
     m_player = std::make_shared<Player>();
     m_gui = std::make_shared<GUI>();
+    m_input = std::make_shared<Input>();
 }
 
 VB VB::m_voxelbyte_inst;
