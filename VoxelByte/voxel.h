@@ -9,7 +9,7 @@
 #include <memory>
 #include "../include/FastNoiseLite/FastNoiseLite.h"
 
-struct Chunk;
+class Chunk;
 class Voxel;
 class ChunkSystem;
 class NoiseGenerator;

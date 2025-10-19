@@ -34,11 +34,11 @@ int main() {
     //glEnable(GL_DEPTH_TEST);
     //glEnable(GL_CULL_FACE);
 
-    Shader ourShader(vertexShaderSource, fragmentShaderSource);
-    Shader crosshairShader(gui.crosshairVertexShaderSource, gui.crosshairFragmentShaderSource);
+    Shader ourShader("../shaders/voxel_vert.glsl", "../shaders/voxel_frag.glsl");
+    Shader crosshairShader("../shaders/crosshair_vert.glsl", "../shaders/crosshair_frag.glsl");
 
     // Setup crosshair
-    gui.SetupCrosshairMesh();
+    VB::inst().GetGUI()->SetupCrosshairMesh();
 
     // Test chunk generation and mesh setup
     //Chunk testChunk(0, glm::ivec3(0, 0, 0));
@@ -108,6 +108,13 @@ int main() {
                         
             VB::inst().GetVoxel()->RenderMesh(mesh, mesh.VAO);
         }
+
+        glDisable(GL_DEPTH_TEST);
+        crosshairShader.use();
+        glBindVertexArray(VB::inst().GetGUI()->crosshairVAO);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glEnable(GL_DEPTH_TEST);
 
         VB::inst().GetGUI()->UpdateImGui(window.GetGLFWwindow());
 
