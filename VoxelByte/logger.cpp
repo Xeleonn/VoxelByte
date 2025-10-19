@@ -35,5 +35,5 @@ std::string Logger::GetCurrentTime()
 
 void Logger::Print(std::string message)
 {
-	std::cout << "<" << GetCurrentTime() << "> " << message << '\n';
+	std::cout << GetCurrentTime() << " <VoxelByte> " << message << '\n';
 }

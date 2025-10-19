@@ -17,9 +17,6 @@
 #include <iostream>
 #include <unordered_map>
 
-// Function declarations
-void processInput(GLFWwindow* window);
-
 int main() {
 
     // Initialize Global Class
@@ -71,7 +68,7 @@ int main() {
     // Render loop
     while (!window.ShouldClose()) {
         VB::inst().GetClock()->Update();
-        processInput(window.GetGLFWwindow());
+        VB::inst().GetInput()->ProcessInput(window.GetGLFWwindow());
 
         glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -128,42 +125,10 @@ int main() {
     // Cleanup
     for (const Voxel::VoxelMesh& mesh : mesh_vec)
         VB::inst().GetVoxel()->FreeRenderMesh(mesh, const_cast<GLuint&>(mesh.VBO), const_cast<GLuint&>(mesh.EBO), const_cast<GLuint&>(mesh.VAO));
-    
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
     return 0;
-}
-
-void processInput(GLFWwindow* window) {
-    // Control cursor visibility with Right Mouse Button
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-    else {
-        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
-
-    // Quit program
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    // Camera movement
-    float deltaTime = float(VB::inst().GetClock()->GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(DOWN, deltaTime);
 }

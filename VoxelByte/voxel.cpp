@@ -272,7 +272,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
         }
     }
 
-    std::cout<<"chunk mesh generated. vtx: "<<chunkMesh.vertices.size()<<" idx: "<<chunkMesh.indices.size()<<"\n";
+    VB::inst().GetLogger()->Print("Chunk mesh generated. Vtx: " + std::to_string(chunkMesh.vertices.size()) + " Idx: " + std::to_string(chunkMesh.indices.size()));
     return chunkMesh;
 }
 
@@ -339,8 +339,8 @@ void MultiChunkSystem::update()
             curr_chunk->GenerateChunk();
             m_chunk_list.insert({curr_id, curr_chunk});
 
-            std::cout<<"chunkid: "<<curr_id<<" x: "<<pawsible_chunk_idx.x<<" y: "<<pawsible_chunk_idx.y<<"\n";
-            std::cout<<"origin x: "<<chunk_idx_to_origin(pawsible_chunk_idx).x<<" z: "<<chunk_idx_to_origin(pawsible_chunk_idx).y<<"\n";
+            VB::inst().GetLogger()->Print("ChunkId: " + std::to_string(curr_id) + " X: " + std::to_string(pawsible_chunk_idx.x) + " Y: " + std::to_string(pawsible_chunk_idx.y));
+            VB::inst().GetLogger()->Print("Origin X: " + std::to_string(chunk_idx_to_origin(pawsible_chunk_idx).x) + " Z: " + std::to_string(chunk_idx_to_origin(pawsible_chunk_idx).y));
         }
     }
 }
