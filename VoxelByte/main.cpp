@@ -91,6 +91,10 @@ int main() {
     //glEnable(GL_CULL_FACE);
 
     Shader ourShader(vertexShaderSource, fragmentShaderSource);
+    Shader crosshairShader(gui.crosshairVertexShaderSource, gui.crosshairFragmentShaderSource);
+
+    // Setup crosshair
+    gui.SetupCrosshairMesh();
 
     // Test chunk generation and mesh setup
     //Chunk testChunk(0, glm::ivec3(0, 0, 0));
@@ -116,6 +120,8 @@ int main() {
     }
 
     GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
+
+    //gui.SetupCrosshairMesh(gui.crosshairVAO, gui.crosshairVBO, gui.crosshairEBO);
 
     // Render loop
     while (!window.ShouldClose()) {
@@ -158,6 +164,14 @@ int main() {
                         
             voxel.RenderMesh(mesh, mesh.VAO);
         }
+
+        // --- Draw crosshair ---
+        glDisable(GL_DEPTH_TEST);
+        crosshairShader.use();
+        glBindVertexArray(gui.crosshairVAO);
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glEnable(GL_DEPTH_TEST);
 
         gui.UpdateImGui(window.GetGLFWwindow());
 

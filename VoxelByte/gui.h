@@ -27,6 +27,13 @@ public:
     float viewDistance = 1000.0f;
     float cameraSpeed = 100.0f;
 
+    void SetupCrosshairMesh();
+
+    const char* crosshairVertexShaderSource;
+    const char* crosshairFragmentShaderSource;
+
+    GLuint crosshairVAO, crosshairVBO, crosshairEBO;
+
 private:
     Clock& gameClock;
 };

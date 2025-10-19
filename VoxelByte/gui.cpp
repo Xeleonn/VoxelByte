@@ -4,7 +4,41 @@
 
 GUI::GUI(Camera& camera, Clock& clock) : gameClock(clock)
 {
+    crosshairVertexShaderSource =
+        "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(aPos, 1.0);\n"
+        "}\0";
+
+    crosshairFragmentShaderSource =
+        "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
+        "}\0";
 }
+
+float crosshairVertices[] = {
+    // Vertical bar (slightly longer to match horizontal visually)
+    -0.001f,  0.017f, 0.0f,
+     0.001f,  0.017f, 0.0f,
+     0.001f, -0.017f, 0.0f,
+    -0.001f, -0.017f, 0.0f,
+
+    // Horizontal bar (base size)
+    -0.015f,  0.001f, 0.0f,
+     0.015f,  0.001f, 0.0f,
+     0.015f, -0.001f, 0.0f,
+    -0.015f, -0.001f, 0.0f
+};
+
+unsigned int crosshairIndices[] = {
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4
+};
 
 GUI::~GUI() {}
 
@@ -81,4 +115,24 @@ void GUI::UpdateImGui(GLFWwindow* window)
 float GUI::GetViewDistance()
 {
     return viewDistance;
+}
+
+void GUI::SetupCrosshairMesh()
+{
+    glGenVertexArrays(1, &crosshairVAO);
+    glGenBuffers(1, &crosshairVBO);
+    glGenBuffers(1, &crosshairEBO);
+
+    glBindVertexArray(crosshairVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshairVertices), crosshairVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, crosshairEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(crosshairIndices), crosshairIndices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }

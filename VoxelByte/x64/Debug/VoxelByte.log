@@ -1,3 +1,2 @@
-﻿  input.cpp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+﻿  gui.cpp
   VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Debug\VoxelByte.exe
