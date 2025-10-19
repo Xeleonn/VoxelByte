@@ -1,7 +1,0 @@
-﻿  main.cpp
-G:\dev\repos\VoxelByte\VoxelByte\voxel.h(64,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
-  (compiling source file 'main.cpp')
-      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(64,7):
-      see declaration of 'Chunk'
-  
-  VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Debug\VoxelByte.exe

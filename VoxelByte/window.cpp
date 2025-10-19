@@ -1,5 +1,4 @@
 #include "window.h"
-#include "camera.h"
 
 Window::Window(int width, int height, const char* title)
     : m_width(width), m_height(height)
@@ -28,13 +27,13 @@ Window::Window(int width, int height, const char* title)
     lastX = m_width / 2.0f;
     lastY = m_height / 2.0f;
 
-    logger.Print("Window created");
+    VB::inst().GetLogger()->Print("Window created");
 }
 
 Window::~Window() {
     if (m_window) {
         glfwDestroyWindow(m_window);
-        logger.Print("Window destroyed");
+        VB::inst().GetLogger()->Print("Window destroyed");
     }
     glfwTerminate();
 }
@@ -78,7 +77,7 @@ void Window::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
         self->lastX = xpos;
         self->lastY = ypos;
 
-        camera.ProcessMouseMovement(xoffset, yoffset);
+        VB::inst().GetCamera()->ProcessMouseMovement(xoffset, yoffset);
     }
     else {
         self->firstMouse = true;
@@ -87,6 +86,6 @@ void Window::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
 
 void Window::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        camera.ProcessMouseScroll(static_cast<float>(yoffset));
+        VB::inst().GetCamera()->ProcessMouseScroll(static_cast<float>(yoffset));
     }
 }

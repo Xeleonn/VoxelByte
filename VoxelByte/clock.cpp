@@ -1,4 +1,4 @@
-#include "clock.h"
+#include "globals.h"
 
 Clock::Clock()
 {

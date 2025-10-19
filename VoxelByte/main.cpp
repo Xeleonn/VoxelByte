@@ -11,13 +11,8 @@
 
 #include "globals.h"
 
-#include "clock.h"
 #include "shader.h"
-#include "player.h"
-#include "voxel.h"
 #include "window.h"
-#include "gui.h"
-#include "logger.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -25,85 +20,34 @@
 // Function declarations
 void processInput(GLFWwindow* window);
 
-// Initialize clock
-Clock gameClock;
-
-// Initialize voxel system
-Voxel voxel;
-
-// Settings
-float clearColor[3] = { 0.7f, 0.7f, 1.0f };
-
-// Player
-Player player;
-
-// Camera
-float viewDistance = 1000.0f;
-float cameraSpeed = camera.MovementSpeed;
-
-// GUI
-GUI gui(camera, gameClock);
-
 int main() {
+
+    // Initialize Global Class
+    VB::inst().init();
 
     // Create window
     Window window(1920, 1080, "VoxelByte");
 
     // Initialize ImGUI
-    gui.InitializeImGUI(window.GetGLFWwindow());
-
-    // Vertex shader
-    const char* vertexShaderSource
-    {
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    "uniform vec3 pos_offset;\n"
-    "void main() {\n"
-    "   gl_Position = projection * view * model * vec4(aPos + pos_offset, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0"
-    };
-
-    // Fragment shader
-    const char* fragmentShaderSource
-    {
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "\n"
-    "void main() {\n"
-    "    // Get normalized Y position (0.0 = bottom, 1.0 = top)\n"
-    "    float gradient = gl_FragCoord.y / 1080.0; \n" // adjust to window height
-    "\n"
-        // Make the gradient darker at bottom, normal at top
-    "    float shade = mix(0.6, 1.0, gradient);\n"
-    "\n"
-    "    FragColor = vec4(ourColor * shade, 1.0f);\n"
-    "}\n\0"
-    };
+    VB::inst().GetGUI()->InitializeImGUI(window.GetGLFWwindow());
 
     //glEnable(GL_DEPTH_TEST);
     //glEnable(GL_CULL_FACE);
 
-    Shader ourShader(vertexShaderSource, fragmentShaderSource);
+    Shader ourShader("../shaders/voxel_vert.glsl", "../shaders/voxel_frag.glsl");
 
     // Test chunk generation and mesh setup
     //Chunk testChunk(0, glm::ivec3(0, 0, 0));
     //testChunk.GenerateChunk();
     //Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
-    ChunkSystem chunk_sys;
+    MultiChunkSystem chunk_sys;
     chunk_sys.update();
 
     int iterator = 5226;
     std::vector<Voxel::VoxelMesh> mesh_vec;
     for (const auto& id_chunk : chunk_sys.get_chunk_map())
     {
-        Voxel::VoxelMesh curr_mesh = voxel.GenerateChunkMesh2(*(id_chunk.second));
+        Voxel::VoxelMesh curr_mesh = VB::inst().GetVoxel()->GenerateChunkMesh2(*(id_chunk.second));
         mesh_vec.push_back(curr_mesh);
         curr_mesh.VBO = iterator;
         curr_mesh.EBO = iterator;
@@ -111,7 +55,8 @@ int main() {
         curr_mesh.mesh_offset = glm::vec3(  static_cast<float>(id_chunk.second->getOrigin().x),
                                             static_cast<float>(id_chunk.second->getOrigin().y),
                                             static_cast<float>(id_chunk.second->getOrigin().z));
-        voxel.SetupRenderMesh(curr_mesh, curr_mesh.VBO, curr_mesh.EBO, curr_mesh.VAO);
+                                            
+        VB::inst().GetVoxel()->SetupRenderMesh(curr_mesh, curr_mesh.VBO, curr_mesh.EBO, curr_mesh.VAO);
         iterator++;
     }
 
@@ -119,10 +64,10 @@ int main() {
 
     // Render loop
     while (!window.ShouldClose()) {
-        gameClock.Update();
+        VB::inst().GetClock()->Update();
         processInput(window.GetGLFWwindow());
 
-        glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
+        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -132,14 +77,14 @@ int main() {
         ourShader.use();
 
         // Projection
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+        glm::mat4 projection = glm::perspective(glm::radians(VB::inst().GetCamera()->Zoom),
             (float)window.GetWidth() / (float)window.GetHeight(),
-            0.1f, gui.GetViewDistance());
+            0.1f, VB::inst().GetGUI()->GetViewDistance());
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"),
             1, GL_FALSE, glm::value_ptr(projection));
 
         // View
-        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 view = VB::inst().GetCamera()->GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"),
             1, GL_FALSE, glm::value_ptr(view));
 
@@ -148,10 +93,6 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
             1, GL_FALSE, glm::value_ptr(model));
 
-        
-
-        camera.MovementSpeed = cameraSpeed;
-
         for (const Voxel::VoxelMesh& mesh : mesh_vec)
         {
             glUniform3f(glGetUniformLocation(ourShader.ID, "pos_offset"),
@@ -159,10 +100,10 @@ int main() {
                         mesh.mesh_offset.y,
                         mesh.mesh_offset.z);
                         
-            voxel.RenderMesh(mesh, mesh.VAO);
+            VB::inst().GetVoxel()->RenderMesh(mesh, mesh.VAO);
         }
 
-        gui.UpdateImGui(window.GetGLFWwindow());
+        VB::inst().GetGUI()->UpdateImGui(window.GetGLFWwindow());
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -173,7 +114,7 @@ int main() {
 
     // Cleanup
     for (const Voxel::VoxelMesh& mesh : mesh_vec)
-        voxel.FreeRenderMesh(mesh, const_cast<GLuint&>(mesh.VBO), const_cast<GLuint&>(mesh.EBO), const_cast<GLuint&>(mesh.VAO));
+        VB::inst().GetVoxel()->FreeRenderMesh(mesh, const_cast<GLuint&>(mesh.VBO), const_cast<GLuint&>(mesh.EBO), const_cast<GLuint&>(mesh.VAO));
     
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -199,17 +140,17 @@ void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 
     // Camera movement
-    float deltaTime = float(gameClock.GetDeltaTime());
+    float deltaTime = float(VB::inst().GetClock()->GetDeltaTime());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
+        VB::inst().GetCamera()->ProcessKeyboard(DOWN, deltaTime);
 }

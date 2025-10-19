@@ -1,10 +1,4 @@
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <vector>
-#include <unordered_map>
-#include "voxel.h"
-#include "shader.h"
-#include "clock.h"
+#include "globals.h"
 
 Voxel::Voxel()
 {
@@ -86,8 +80,6 @@ Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
     m_origin = origin;
 
     m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
-
-    m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 }
 
 glm::ivec3 Chunk::getOrigin()
@@ -114,14 +106,13 @@ void Chunk::GenerateChunk()
     {
         for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
         {
-            float height_noise = m_noise.GetNoise(  static_cast<float>(m_origin.x + x),
-                                                    static_cast<float>(m_origin.z + z));
+            float height_noise = VB::inst().GetNoiseGenerator()->GetNoise().GetNoise(static_cast<float>(m_origin.x + x), static_cast<float>(m_origin.z + z));
 
             for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
             {
                 uint8_t v_id;
 
-                if ((height_noise + 1.0f) * 64.0f > y)
+                if ((height_noise + 1.0f) * 32.0f > y)
                     v_id = 1;
                 else
                     v_id = 0;
@@ -324,15 +315,15 @@ void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO
     EBO = 0;
 }
 
-ChunkSystem::ChunkSystem()
+MultiChunkSystem::MultiChunkSystem()
 {
 }
 
-void ChunkSystem::update()
+void MultiChunkSystem::update()
 {
     // get nearest chunk indices in range
     glm::ivec2 nearest_chunk_idx;
-    nearest_chunk_idx = pos_to_nearest_chunk_idx(camera.Position);
+    nearest_chunk_idx = pos_to_nearest_chunk_idx(VB::inst().GetCamera()->Position);
     
     for (int x = -m_chunk_gen_radius; x < m_chunk_gen_radius; x++)
     {
@@ -354,29 +345,29 @@ void ChunkSystem::update()
     }
 }
 
-glm::ivec2 ChunkSystem::pos_to_nearest_chunk_idx(glm::vec3 camera_position)
+glm::ivec2 MultiChunkSystem::pos_to_nearest_chunk_idx(glm::vec3 camera_position)
 {
     glm::ivec2 idx;
-    if (camera_position.x < 0.0f) idx.x = ((camera_position.x - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
-    else idx.x = (camera_position.x / Chunk::CHUNK_SIZE);
-    if (camera_position.z < 0.0f) idx.y = ((camera_position.z - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
-    else idx.y = (camera_position.z / Chunk::CHUNK_SIZE);
+    if (camera_position.x < 0.0f) idx.x = static_cast<int>((camera_position.x - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.x = static_cast<int>(camera_position.x / Chunk::CHUNK_SIZE);
+    if (camera_position.z < 0.0f) idx.y = static_cast<int>((camera_position.z - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.y = static_cast<int>(camera_position.z / Chunk::CHUNK_SIZE);
 
     return idx;
 }
 
-const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& ChunkSystem::get_chunk_map() const
+const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& MultiChunkSystem::get_chunk_map() const
 {
     return m_chunk_list;
 }
 
-glm::ivec2 ChunkSystem::chunk_idx_to_origin(glm::ivec2 chunk_idx)
+glm::ivec2 MultiChunkSystem::chunk_idx_to_origin(glm::ivec2 chunk_idx)
 {
     return glm::ivec2(  chunk_idx.x * Chunk::CHUNK_SIZE,
                         chunk_idx.y * Chunk::CHUNK_SIZE);
 }
 
-inline ChunkID ChunkSystem::chunk_idx_id(glm::ivec2 chunk_idx)
+inline ChunkID MultiChunkSystem::chunk_idx_id(glm::ivec2 chunk_idx)
 {
     ChunkID id;
     id = chunk_idx.x;
@@ -384,6 +375,17 @@ inline ChunkID ChunkSystem::chunk_idx_id(glm::ivec2 chunk_idx)
     id = id | chunk_idx.y;
     return id;
 }
+
+NoiseGenerator::NoiseGenerator()
+{
+    m_noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+}
+
+FastNoiseLite NoiseGenerator::GetNoise()
+{
+    return m_noise;
+}
+
 
 
 const float Voxel::voxelColors[256][3] = {

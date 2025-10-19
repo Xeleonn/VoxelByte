@@ -1,20 +1,18 @@
 #ifndef VOXEL_H
 #define VOXEL_H
 
-#include "globals.h"
-
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include "camera.h"
 #include "../include/FastNoiseLite/FastNoiseLite.h"
 
 struct Chunk;
 class Voxel;
 class ChunkSystem;
+class NoiseGenerator;
 
 class Voxel
 {
@@ -65,7 +63,7 @@ typedef unsigned long long int ChunkID;
 class Chunk
 {
 public:
-    static const int CHUNK_SIZE = 128;
+    static const int CHUNK_SIZE = 64;
 
     Chunk(ChunkID CID, glm::ivec3 origin);
     void GenerateChunk();
@@ -76,31 +74,43 @@ public:
 private:
     bool m_generated = false;
     ChunkID m_chunkID;
-    FastNoiseLite m_noise;
     glm::ivec3 m_origin;
     std::vector<uint8_t> m_voxelArray;
 };
 
-class ChunkSystem {
+class MultiChunkSystem {
 public:
-    ChunkSystem();
+    MultiChunkSystem();
     static const int WORLD_CHUNK_RADIUS = 2048;
     static const int CHUNK_HEIGHT = 1;
 
     void update();
     glm::ivec2 pos_to_nearest_chunk_idx(glm::vec3 camera_position);
     const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& get_chunk_map() const;
+
     
 private:
-    int m_chunk_gen_radius = 2;
-
-    glm::ivec2 chunk_idx_to_origin(glm::ivec2 chunk_idx);
-    inline ChunkID chunk_idx_id(glm::ivec2 chunk_idx);
+    int m_chunk_gen_radius = 4;
 
     std::unordered_map<ChunkID, std::shared_ptr<Chunk>> m_chunk_list;
     std::vector<std::shared_ptr<Chunk>> loaded_chunks;
 
-    std::shared_ptr<Camera> m_camera;
+    glm::ivec2 chunk_idx_to_origin(glm::ivec2 chunk_idx);
+    inline ChunkID chunk_idx_id(glm::ivec2 chunk_idx);
+};
+
+class NoiseGenerator
+{
+public:
+    NoiseGenerator();
+    
+    FastNoiseLite GetNoise();
+
+private:
+    int m_seed = 6;
+    float m_freq = 0.2;
+    FastNoiseLite m_noise;
+    
 };
 
 #endif

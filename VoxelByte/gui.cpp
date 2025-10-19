@@ -1,8 +1,6 @@
-#include "gui.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "globals.h"
 
-GUI::GUI(Camera& camera, Clock& clock) : gameClock(clock)
+GUI::GUI()
 {
 }
 
@@ -18,7 +16,7 @@ void GUI::InitializeImGUI(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 330");
     io.IniFilename = nullptr;
 
-    logger.Print("ImGUI initialized");
+    VB::inst().GetLogger()->Print("ImGUI initialized");
 }
 
 void GUI::UpdateImGui(GLFWwindow* window)
@@ -27,14 +25,14 @@ void GUI::UpdateImGui(GLFWwindow* window)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
-    ImGui::Text("Time: %.2f s", gameClock.GetTime());
-    ImGui::Text("Delta Time: %.4f ms", gameClock.GetDeltaTime() * 1000.0f);
-    ImGui::Text("%.1f FPS", gameClock.GetFPS());
+    ImGui::Text("Time: %.2f s", VB::inst().GetClock()->GetTime());
+    ImGui::Text("Delta Time: %.4f ms", VB::inst().GetClock()->GetDeltaTime() * 1000.0f);
+    ImGui::Text("%.1f FPS", VB::inst().GetClock()->GetFPS());
 
     ImGui::Separator();
     ImGui::Text("Camera Position:");
-    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", camera.Position.x, camera.Position.y, camera.Position.z);
-    ImGui::Text("Yaw: %.1f, Pitch: %.1f", camera.Yaw, camera.Pitch);
+    ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", VB::inst().GetCamera()->Position.x, VB::inst().GetCamera()->Position.y, VB::inst().GetCamera()->Position.z);
+    ImGui::Text("Yaw: %.1f, Pitch: %.1f", VB::inst().GetCamera()->Yaw, VB::inst().GetCamera()->Pitch);
 
     ImGui::Separator();
     if (ImGui::CollapsingHeader("Window")) {
@@ -68,7 +66,7 @@ void GUI::UpdateImGui(GLFWwindow* window)
         ImGui::Separator();
         ImGui::Text("Speed:");
         ImGui::SliderFloat(" ", &cameraSpeed, 1.0f, 1000.0f);
-        camera.MovementSpeed = cameraSpeed;
+        VB::inst().GetCamera()->MovementSpeed = cameraSpeed;
         ImGui::Separator();
         ImGui::Text("View Distance:");
         ImGui::SliderFloat("  ", &viewDistance, 100.0f, 10000.0f);

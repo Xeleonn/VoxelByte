@@ -1,7 +1,0 @@
-﻿  window.cpp
-  Generating code
-  212 of 2578 functions ( 8.2%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    112 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe

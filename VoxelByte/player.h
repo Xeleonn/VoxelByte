@@ -1,10 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "globals.h"
-
-#include "camera.h"
-#include "logger.h"
+#include <glm/glm.hpp>
 #include <memory>
 #include <iostream>
 #include <string>
@@ -15,11 +12,7 @@ public:
     Player();
 
     // Set camera to player
-    std::shared_ptr<Camera> playerCamera;
-    void setCamera(std::shared_ptr<Camera> camera) 
-    {
-        playerCamera = camera;
-    }
+
 
     std::string name = "Player";
     glm::vec3 position;

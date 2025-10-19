@@ -1,21 +1,18 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include "globals.h"
-
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
 #include <memory>
-#include "window.h"
-#include "clock.h"
-#include "camera.h"
 
 class GUI
 {
 public:
-    GUI(Camera& camera, Clock& clock);
+    GUI();
     ~GUI();
 
     void InitializeImGUI(GLFWwindow* window);
@@ -28,7 +25,6 @@ public:
     float cameraSpeed = 100.0f;
 
 private:
-    Clock& gameClock;
 };
 
 #endif

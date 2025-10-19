@@ -1,6 +1,6 @@
-#include "player.h"
+#include "globals.h"
 
 Player::Player()
 {
-	logger.Print(name + " has spawned");
+	VB::inst().GetLogger()->Print(name + " has spawned");
 }
