@@ -18,12 +18,10 @@
 #include "window.h"
 #include "gui.h"
 #include "logger.h"
+#include "input.h"
 
 #include <iostream>
 #include <unordered_map>
-
-// Function declarations
-void processInput(GLFWwindow* window);
 
 // Initialize clock
 Clock gameClock;
@@ -39,7 +37,9 @@ Player player;
 
 // Camera
 float viewDistance = 1000.0f;
-float cameraSpeed = camera.MovementSpeed;
+
+// Input
+Input input;
 
 // GUI
 GUI gui(camera, gameClock);
@@ -120,7 +120,7 @@ int main() {
     // Render loop
     while (!window.ShouldClose()) {
         gameClock.Update();
-        processInput(window.GetGLFWwindow());
+        input.ProcessInput(window.GetGLFWwindow(), gameClock);
 
         glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -148,9 +148,6 @@ int main() {
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
             1, GL_FALSE, glm::value_ptr(model));
 
-        
-
-        camera.MovementSpeed = cameraSpeed;
 
         for (const Voxel::VoxelMesh& mesh : mesh_vec)
         {
@@ -181,35 +178,4 @@ int main() {
     ImGui::DestroyContext();
 
     return 0;
-}
-
-void processInput(GLFWwindow* window) {
-    // Control cursor visibility with Right Mouse Button
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-    else {
-        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
-
-    // Quit program
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    // Camera movement
-    float deltaTime = float(gameClock.GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
 }

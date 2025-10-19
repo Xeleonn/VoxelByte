@@ -357,10 +357,10 @@ void ChunkSystem::update()
 glm::ivec2 ChunkSystem::pos_to_nearest_chunk_idx(glm::vec3 camera_position)
 {
     glm::ivec2 idx;
-    if (camera_position.x < 0.0f) idx.x = ((camera_position.x - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
-    else idx.x = (camera_position.x / Chunk::CHUNK_SIZE);
-    if (camera_position.z < 0.0f) idx.y = ((camera_position.z - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
-    else idx.y = (camera_position.z / Chunk::CHUNK_SIZE);
+    if (camera_position.x < 0.0f) idx.x = static_cast<int>((camera_position.x - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.x = static_cast<int>(camera_position.x / Chunk::CHUNK_SIZE);
+    if (camera_position.z < 0.0f) idx.y = static_cast<int>((camera_position.z - Chunk::CHUNK_SIZE) / Chunk::CHUNK_SIZE);
+    else idx.y = static_cast<int>(camera_position.z / Chunk::CHUNK_SIZE);
 
     return idx;
 }

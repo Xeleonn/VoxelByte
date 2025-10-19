@@ -1,7 +1,7 @@
-﻿  window.cpp
-  Generating code
-  212 of 2578 functions ( 8.2%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    112 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  VoxelByte.vcxproj -> G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe
+﻿  voxel.cpp
+G:\dev\repos\VoxelByte\VoxelByte\voxel.h(65,7): warning C4099: 'Chunk': type name first seen using 'struct' now seen using 'class'
+  (compiling source file 'voxel.cpp')
+      G:\dev\repos\VoxelByte\VoxelByte\voxel.h(65,7):
+      see declaration of 'Chunk'
+  
+LINK : fatal error LNK1104: cannot open file 'G:\dev\repos\VoxelByte\x64\Release\VoxelByte.exe'

@@ -142,6 +142,7 @@
     <ClCompile Include="clock.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="gui.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="window.cpp" />
     <ClCompile Include="main.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="clock.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="input.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="shader.h" />
