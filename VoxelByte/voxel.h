@@ -7,17 +7,20 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include "shader.h"
 #include "../include/FastNoiseLite/FastNoiseLite.h"
 
+class VoxelRenderer;
 class Chunk;
-class Voxel;
-class ChunkSystem;
+class MultiChunkSystem;
 class NoiseGenerator;
 
-class Voxel
+typedef unsigned long long int ChunkID;
+
+class VoxelRenderer
 {
 public:
-    Voxel();
+    VoxelRenderer();
 
     uint8_t voxelId = 1;
 
@@ -38,27 +41,43 @@ public:
         std::vector<float> vertices;
         std::vector<unsigned int> indices;
 
-        GLuint VBO, EBO, VAO;
-        glm::vec3 mesh_offset;
-
         int AddVertex(float x, float y, float z, uint8_t id);
         void AddIndex(int v0, int v1, int v2);
     };
 
-    VoxelMesh GenerateChunkMesh2(Chunk chunk);
+    struct VoxelRenderBufferInfo
+    {
+        GLuint VBO;
+        GLuint EBO;
+        ChunkID chunk_id;
+        size_t vtx_size;
+        size_t idx_size;
+        glm::ivec3 chunk_origin;
+    };
 
-    void SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
-    void RenderMesh(const VoxelMesh& mesh, GLuint VAO);
-    void FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO);
+    void SetShader(std::shared_ptr<Shader> shader);
+
+    VoxelMesh GenerateChunkMesh(Chunk chunk);
+    void BufferVoxelMesh(const ChunkID& chunk_id, VoxelMesh& mesh);
+    void DeleteVoxelMesh(const ChunkID& chunk_id);
+    void RenderMesh(const ChunkID& chunk_id);
+    void RenderAllMeshes();
+    void FreeRenderMeshes();
+
     static const float voxelColors[256][3];
 
 private:
-    static VoxelData m_voxelRegistry[256];
     static bool m_initialized;
+
+    std::shared_ptr<Shader> m_voxel_shader = nullptr;
+
+    GLuint VoxelRendererVAO = 0;
+    std::unordered_map<ChunkID, VoxelRenderBufferInfo> VoxelRendererBufferInfoMap;
+
+
+    static VoxelData m_voxelRegistry[256];
     static void init();
 };
-
-typedef unsigned long long int ChunkID;
 
 class Chunk
 {
@@ -81,15 +100,17 @@ private:
 class MultiChunkSystem {
 public:
     MultiChunkSystem();
-    static const int WORLD_CHUNK_RADIUS = 2048;
-    static const int CHUNK_HEIGHT = 1;
-
     void update();
+
     glm::ivec2 pos_to_nearest_chunk_idx(glm::vec3 camera_position);
     const std::unordered_map<ChunkID, std::shared_ptr<Chunk>>& get_chunk_map() const;
+    const glm::ivec3 GetChunkOrigin(const ChunkID& chunk_id);
 
     
 private:
+    static const int WORLD_CHUNK_RADIUS = 2048;
+    static const int CHUNK_HEIGHT = 1;
+
     int m_chunk_gen_radius = 4;
 
     std::unordered_map<ChunkID, std::shared_ptr<Chunk>> m_chunk_list;

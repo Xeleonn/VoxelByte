@@ -22,7 +22,7 @@ public:
     std::shared_ptr<Camera>             GetCamera()             { return m_camera; }
     std::shared_ptr<MultiChunkSystem>   GetMultiChunkSystem()   { return m_chunksystem; }
     std::shared_ptr<NoiseGenerator>     GetNoiseGenerator()     { return m_noisegenerator; }
-    std::shared_ptr<Voxel>              GetVoxel()              { return m_voxel; }
+    std::shared_ptr<VoxelRenderer>      GetVoxel()              { return m_voxel; }
     std::shared_ptr<Clock>              GetClock()              { return m_clock; }
     std::shared_ptr<Player>             GetPlayer()             { return m_player; }
     std::shared_ptr<GUI>                GetGUI()                { return m_gui; }
@@ -35,7 +35,7 @@ private:
     std::shared_ptr<Camera>             m_camera;
     std::shared_ptr<MultiChunkSystem>   m_chunksystem;
     std::shared_ptr<NoiseGenerator>     m_noisegenerator;
-    std::shared_ptr<Voxel>              m_voxel;
+    std::shared_ptr<VoxelRenderer>      m_voxel;
     std::shared_ptr<Clock>              m_clock;
     std::shared_ptr<Player>             m_player;
     std::shared_ptr<GUI>                m_gui;

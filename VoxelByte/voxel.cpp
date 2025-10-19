@@ -1,13 +1,15 @@
 #include "globals.h"
 
-Voxel::Voxel()
+// ----------<[ VOXELDATA CLASS IMPLEMENTATION ]>----------
+
+VoxelRenderer::VoxelRenderer()
 {
 }
 
-bool Voxel::m_initialized = false;
-Voxel::VoxelData Voxel::m_voxelRegistry[256];
+bool VoxelRenderer::m_initialized = false;
+VoxelRenderer::VoxelData VoxelRenderer::m_voxelRegistry[256];
 
-void Voxel::init() {
+void VoxelRenderer::init() {
     if (m_initialized) return;
     m_initialized = true;
 
@@ -68,62 +70,12 @@ void Voxel::init() {
     };
 }
 
-const Voxel::VoxelData& Voxel::GetVoxelData(uint8_t voxelId) {
+const VoxelRenderer::VoxelData& VoxelRenderer::GetVoxelData(uint8_t voxelId) {
     init();
     return m_voxelRegistry[voxelId];
 }
 
-// ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
-Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
-{
-    m_chunkID = CID;
-    m_origin = origin;
-
-    m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
-}
-
-glm::ivec3 Chunk::getOrigin()
-{
-    return m_origin;
-}
-
-void Chunk::SetVoxel(glm::ivec3 pos, const uint8_t& id)
-{
-    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = id;
-}
-
-uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
-{
-    return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
-}
-
-void Chunk::GenerateChunk()
-{
-    if (m_generated == true) return;
-    m_generated = true;
-
-    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
-    {
-        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
-        {
-            float height_noise = VB::inst().GetNoiseGenerator()->GetNoise().GetNoise(static_cast<float>(m_origin.x + x), static_cast<float>(m_origin.z + z));
-
-            for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
-            {
-                uint8_t v_id;
-
-                if ((height_noise + 1.0f) * 32.0f > y)
-                    v_id = 1;
-                else
-                    v_id = 0;
-
-                SetVoxel(glm::vec3(x, y, z), v_id);
-            }
-        }
-    }
-}
-
-int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
+int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
 {
     vertices.push_back(x);
     vertices.push_back(y);
@@ -134,13 +86,18 @@ int Voxel::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
     return static_cast<int>((vertices.size() / 6) - 1);
 }
 
-void Voxel::VoxelMesh::AddIndex(int v0, int v1, int v2) {
+void VoxelRenderer::VoxelMesh::AddIndex(int v0, int v1, int v2) {
     indices.push_back(v0);
     indices.push_back(v1);
     indices.push_back(v2);
 }
 
-Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
+void VoxelRenderer::SetShader(std::shared_ptr<Shader> shader)
+{
+    m_voxel_shader = shader;
+}
+
+VoxelRenderer::VoxelMesh VoxelRenderer::GenerateChunkMesh(Chunk chunk)
 {
     VoxelMesh chunkMesh;
 
@@ -174,7 +131,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                     if (0 <= x[d]) {
                         uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0], x[1], x[2]));
-                        blockCurrent = !Voxel::GetVoxelData(voxelId).solid;
+                        blockCurrent = !VoxelRenderer::GetVoxelData(voxelId).solid;
                     }
                     else {
                         blockCurrent = true;
@@ -182,7 +139,7 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
 
                     if (x[d] < (Chunk::CHUNK_SIZE - 1)) {
                         uint8_t voxelId = chunk.GetVoxel(glm::ivec3(x[0] + q[0], x[1] + q[1], x[2] + q[2]));
-                        blockCompare = !Voxel::GetVoxelData(voxelId).solid;
+                        blockCompare = !VoxelRenderer::GetVoxelData(voxelId).solid;
                     }
                     else {
                         blockCompare = true;
@@ -276,45 +233,144 @@ Voxel::VoxelMesh Voxel::GenerateChunkMesh2(Chunk chunk)
     return chunkMesh;
 }
 
-void Voxel::SetupRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
+void VoxelRenderer::BufferVoxelMesh(const ChunkID& chunk_id, VoxelMesh& mesh)
 {
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    if (VoxelRendererBufferInfoMap.find(chunk_id) != VoxelRendererBufferInfoMap.end()) return;
 
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    if (VoxelRendererVAO == 0) glGenVertexArrays(1, &VoxelRendererVAO);
+
+    GLuint CurrentMeshVBO, CurrentMeshEBO;
+
+    glBindVertexArray(VoxelRendererVAO);
+
+    glGenBuffers(1, &CurrentMeshVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CurrentMeshVBO);
     glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(float), mesh.vertices.data(), GL_STATIC_DRAW);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glGenBuffers(1, &CurrentMeshEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CurrentMeshEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-}
+    VoxelRenderBufferInfo VRBI;
+    VRBI.VBO = CurrentMeshVBO;
+    VRBI.EBO = CurrentMeshEBO;
+    VRBI.chunk_id = chunk_id;
+    VRBI.vtx_size = mesh.vertices.size();
+    VRBI.idx_size = mesh.indices.size();
+    VRBI.chunk_origin = VB::inst().GetMultiChunkSystem()->GetChunkOrigin(chunk_id);
 
-void Voxel::RenderMesh(const VoxelMesh& mesh, GLuint VAO)
-{
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size() * 3), GL_UNSIGNED_INT, 0);
+    VoxelRendererBufferInfoMap.insert(std::make_pair(chunk_id, VRBI));
+
     glBindVertexArray(0);
 }
 
-void Voxel::FreeRenderMesh(VoxelMesh mesh, GLuint& VBO, GLuint& EBO, GLuint& VAO)
+void VoxelRenderer::DeleteVoxelMesh(const ChunkID& chunk_id)
 {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    if (VoxelRendererBufferInfoMap.find(chunk_id) == VoxelRendererBufferInfoMap.end()) return;
+    VoxelRenderBufferInfo CurrentMeshBufferInfo = VoxelRendererBufferInfoMap.at(chunk_id);
 
-    VAO = 0;
-    VBO = 0;
-    EBO = 0;
+    glDeleteBuffers(1, &CurrentMeshBufferInfo.VBO);
+    glDeleteBuffers(1, &CurrentMeshBufferInfo.EBO);
+
+    VoxelRendererBufferInfoMap.erase(chunk_id);
 }
 
+void VoxelRenderer::RenderMesh(const ChunkID& chunk_id)
+{
+    if (VoxelRendererBufferInfoMap.find(chunk_id) == VoxelRendererBufferInfoMap.end()) return;
+    VoxelRenderBufferInfo CurrentMeshBufferInfo = VoxelRendererBufferInfoMap.at(chunk_id);
+
+    glBindVertexArray(VoxelRendererVAO);
+
+    // position attribute
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, CurrentMeshBufferInfo.VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+    // color attribute
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CurrentMeshBufferInfo.EBO);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(CurrentMeshBufferInfo.idx_size * 3), GL_UNSIGNED_INT, 0);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+}
+
+void VoxelRenderer::RenderAllMeshes()
+{
+    if (m_voxel_shader == nullptr) return;
+    //m_voxel_shader->use();
+
+    for (const auto& render_item : VoxelRendererBufferInfoMap)
+    {
+        m_voxel_shader->setFloat3(  "pos_offset",
+                                    render_item.second.chunk_origin.x,
+                                    render_item.second.chunk_origin.y,
+                                    render_item.second.chunk_origin.z);
+
+        RenderMesh(render_item.first);
+    }
+}
+
+void VoxelRenderer::FreeRenderMeshes()
+{
+    for (const auto& render_item : VoxelRendererBufferInfoMap) DeleteVoxelMesh(render_item.first);
+    glDeleteVertexArrays(1, &VoxelRendererVAO);
+}
+
+// ----------<[ CHUNK CLASS IMPLEMENTATION ]>----------
+Chunk::Chunk(ChunkID CID, glm::ivec3 origin)
+{
+    m_chunkID = CID;
+    m_origin = origin;
+
+    m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
+}
+
+glm::ivec3 Chunk::getOrigin()
+{
+    return m_origin;
+}
+
+void Chunk::SetVoxel(glm::ivec3 pos, const uint8_t& id)
+{
+    m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z) = id;
+}
+
+uint8_t Chunk::GetVoxel(glm::ivec3 pos) const
+{
+    return m_voxelArray.at(pos.x * CHUNK_SIZE * CHUNK_SIZE + pos.y * CHUNK_SIZE + pos.z);
+}
+
+void Chunk::GenerateChunk()
+{
+    if (m_generated == true) return;
+    m_generated = true;
+
+    for (int x = 0; x < Chunk::CHUNK_SIZE; x++)
+    {
+        for (int z = 0; z < Chunk::CHUNK_SIZE; z++)
+        {
+            float height_noise = VB::inst().GetNoiseGenerator()->GetNoise().GetNoise(static_cast<float>(m_origin.x + x), static_cast<float>(m_origin.z + z));
+
+            for (int y = 0; y < Chunk::CHUNK_SIZE; y++)
+            {
+                uint8_t v_id;
+
+                if ((height_noise + 1.0f) * 32.0f > y)
+                    v_id = 1;
+                else
+                    v_id = 0;
+
+                SetVoxel(glm::vec3(x, y, z), v_id);
+            }
+        }
+    }
+}
+
+// ----------<[ MULTICHUNK CLASS IMPLEMENTATION ]>----------
 MultiChunkSystem::MultiChunkSystem()
 {
 }
@@ -332,14 +388,14 @@ void MultiChunkSystem::update()
             glm::ivec2 pawsible_chunk_idx(  nearest_chunk_idx.x + x,
                                             nearest_chunk_idx.y + z);
 
-            //if (glm::distance(glm::vec2(nearest_chunk_idx), glm::vec2(pawsible_chunk_idx)) > static_cast<float>(m_chunk_gen_radius)) continue;
+            if (glm::distance(glm::vec2(nearest_chunk_idx), glm::vec2(pawsible_chunk_idx)) > static_cast<float>(m_chunk_gen_radius)) continue;
 
             ChunkID curr_id = chunk_idx_id(pawsible_chunk_idx);
-            std::shared_ptr<Chunk> curr_chunk = std::make_unique<Chunk>(curr_id, glm::ivec3(chunk_idx_to_origin(pawsible_chunk_idx).x, 0, chunk_idx_to_origin(pawsible_chunk_idx).y));
+            std::shared_ptr<Chunk> curr_chunk = std::make_shared<Chunk>(curr_id, glm::ivec3(chunk_idx_to_origin(pawsible_chunk_idx).x, 0, chunk_idx_to_origin(pawsible_chunk_idx).y));
             curr_chunk->GenerateChunk();
-            m_chunk_list.insert({curr_id, curr_chunk});
+            m_chunk_list.insert({curr_id, std::move(curr_chunk)});
 
-            std::cout<<"chunkid: "<<curr_id<<" x: "<<pawsible_chunk_idx.x<<" y: "<<pawsible_chunk_idx.y<<"\n";
+            std::cout<<"chunk id: "<<curr_id<<" x: "<<pawsible_chunk_idx.x<<" y: "<<pawsible_chunk_idx.y<<"\n";
             std::cout<<"origin x: "<<chunk_idx_to_origin(pawsible_chunk_idx).x<<" z: "<<chunk_idx_to_origin(pawsible_chunk_idx).y<<"\n";
         }
     }
@@ -374,6 +430,12 @@ inline ChunkID MultiChunkSystem::chunk_idx_id(glm::ivec2 chunk_idx)
     id = id << 32;
     id = id | chunk_idx.y;
     return id;
+}
+
+const glm::ivec3 MultiChunkSystem::GetChunkOrigin(const ChunkID& chunk_id)
+{
+    if (m_chunk_list.find(chunk_id) == m_chunk_list.end()) return glm::ivec3(0, 0, 0);
+    else return m_chunk_list.at(chunk_id)->getOrigin();
 }
 
 NoiseGenerator::NoiseGenerator()

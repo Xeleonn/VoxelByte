@@ -31,47 +31,27 @@ int main() {
     // Initialize ImGUI
     VB::inst().GetGUI()->InitializeImGUI(window.GetGLFWwindow());
 
-    //glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
-
-    Shader ourShader("../shaders/voxel_vert.glsl", "../shaders/voxel_frag.glsl");
+    std::shared_ptr<Shader> VoxelShader = std::make_shared<Shader>("../shaders/voxel_vert.glsl", "../shaders/voxel_frag.glsl");
     Shader crosshairShader("../shaders/crosshair_vert.glsl", "../shaders/crosshair_frag.glsl");
 
     // Setup crosshair
     VB::inst().GetGUI()->SetupCrosshairMesh();
 
-    // Test chunk generation and mesh setup
-    //Chunk testChunk(0, glm::ivec3(0, 0, 0));
-    //testChunk.GenerateChunk();
-    //Voxel::VoxelMesh testMesh = voxel.GenerateChunkMesh2(testChunk);
-    MultiChunkSystem chunk_sys;
-    chunk_sys.update();
+    VB::inst().GetMultiChunkSystem()->update();
 
-    int iterator = 5226;
-    std::vector<Voxel::VoxelMesh> mesh_vec;
-    for (const auto& id_chunk : chunk_sys.get_chunk_map())
+    VB::inst().GetVoxel()->SetShader(VoxelShader);
+    for (const auto& id_chunk : VB::inst().GetMultiChunkSystem()->get_chunk_map())
     {
-        Voxel::VoxelMesh curr_mesh = VB::inst().GetVoxel()->GenerateChunkMesh2(*(id_chunk.second));
-        mesh_vec.push_back(curr_mesh);
-        curr_mesh.VBO = iterator;
-        curr_mesh.EBO = iterator;
-        curr_mesh.VAO = iterator;
-        curr_mesh.mesh_offset = glm::vec3(  static_cast<float>(id_chunk.second->getOrigin().x),
-                                            static_cast<float>(id_chunk.second->getOrigin().y),
-                                            static_cast<float>(id_chunk.second->getOrigin().z));
-                                            
-        VB::inst().GetVoxel()->SetupRenderMesh(curr_mesh, curr_mesh.VBO, curr_mesh.EBO, curr_mesh.VAO);
-        iterator++;
+        VoxelRenderer::VoxelMesh curr_mesh = VB::inst().GetVoxel()->GenerateChunkMesh(*(id_chunk.second));
+        VB::inst().GetVoxel()->BufferVoxelMesh(id_chunk.first, curr_mesh);
     }
-
-    GLuint chunkVBO = 0, chunkEBO = 0, chunkVAO = 0; // Initialize to 0
-
-    //gui.SetupCrosshairMesh(gui.crosshairVAO, gui.crosshairVBO, gui.crosshairEBO);
+    // Enable OpenGL functionality
+    glEnable(GL_DEPTH_TEST);
 
     // Render loop
     while (!window.ShouldClose()) {
         VB::inst().GetClock()->Update();
-        processInput(window.GetGLFWwindow());
+        VB::inst().GetInput()->ProcessInput(window.GetGLFWwindow());
 
         glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -80,41 +60,30 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ourShader.use();
-
         // Projection
+        VoxelShader->use();
         glm::mat4 projection = glm::perspective(glm::radians(VB::inst().GetCamera()->Zoom),
             (float)window.GetWidth() / (float)window.GetHeight(),
             0.1f, VB::inst().GetGUI()->GetViewDistance());
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "projection"),
+        glUniformMatrix4fv(glGetUniformLocation(VoxelShader->ID, "projection"),
             1, GL_FALSE, glm::value_ptr(projection));
 
         // View
         glm::mat4 view = VB::inst().GetCamera()->GetViewMatrix();
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "view"),
+        glUniformMatrix4fv(glGetUniformLocation(VoxelShader->ID, "view"),
             1, GL_FALSE, glm::value_ptr(view));
 
         // Model
         glm::mat4 model = glm::mat4(1.0f);
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"),
+        glUniformMatrix4fv(glGetUniformLocation(VoxelShader->ID, "model"),
             1, GL_FALSE, glm::value_ptr(model));
 
-        for (const Voxel::VoxelMesh& mesh : mesh_vec)
-        {
-            glUniform3f(glGetUniformLocation(ourShader.ID, "pos_offset"),
-                        mesh.mesh_offset.x,
-                        mesh.mesh_offset.y,
-                        mesh.mesh_offset.z);
-                        
-            VB::inst().GetVoxel()->RenderMesh(mesh, mesh.VAO);
-        }
+        VB::inst().GetVoxel()->RenderAllMeshes();
 
-        glDisable(GL_DEPTH_TEST);
         crosshairShader.use();
         glBindVertexArray(VB::inst().GetGUI()->crosshairVAO);
         glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
-        glEnable(GL_DEPTH_TEST);
 
         VB::inst().GetGUI()->UpdateImGui(window.GetGLFWwindow());
 
@@ -126,8 +95,7 @@ int main() {
     }
 
     // Cleanup
-    for (const Voxel::VoxelMesh& mesh : mesh_vec)
-        VB::inst().GetVoxel()->FreeRenderMesh(mesh, const_cast<GLuint&>(mesh.VBO), const_cast<GLuint&>(mesh.EBO), const_cast<GLuint&>(mesh.VAO));
+    VB::inst().GetVoxel()->FreeRenderMeshes();
     
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -135,35 +103,4 @@ int main() {
     ImGui::DestroyContext();
 
     return 0;
-}
-
-void processInput(GLFWwindow* window) {
-    // Control cursor visibility with Right Mouse Button
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-    else {
-        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
-
-    // Quit program
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    // Camera movement
-    float deltaTime = float(VB::inst().GetClock()->GetDeltaTime());
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        VB::inst().GetCamera()->ProcessKeyboard(DOWN, deltaTime);
 }

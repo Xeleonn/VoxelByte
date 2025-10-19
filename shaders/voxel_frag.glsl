@@ -1,7 +1,7 @@
 #version 330 core
 
 out vec4 FragColor;
-in vec3 ourColor;
+in vec3 frag_color;
 
 void main()
 {
@@ -9,5 +9,5 @@ void main()
 
     float shade = mix(0.6, 1.0, gradient);
 
-    FragColor = vec4(ourColor * shade, 1.0f);
+    FragColor = vec4(frag_color * shade, 1.0f);
 }
