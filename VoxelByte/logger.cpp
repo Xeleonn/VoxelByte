@@ -38,3 +38,8 @@ void Logger::Print(std::string message)
 {
 	std::cout << GetCurrentTime() << " <VoxelByte> " << message << '\n';
 }
+
+void Logger::PrintErr(std::string message)
+{
+    std::cout << GetCurrentTime() << " <VoxelByte> ERROR: " << message << '\n';
+}

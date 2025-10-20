@@ -41,7 +41,7 @@ public:
         std::vector<float> vertices;
         std::vector<unsigned int> indices;
 
-        int AddVertex(float x, float y, float z, uint8_t id);
+        int AddVertex(float x, float y, float z, uint8_t id, float u, float v);
         void AddIndex(int v0, int v1, int v2);
     };
 

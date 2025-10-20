@@ -14,6 +14,7 @@ public:
 	std::string GetCurrentTime();
 
 	void Print(std::string message);
+	void PrintErr(std::string message);
 };
 
 #endif

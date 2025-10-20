@@ -75,7 +75,7 @@ const VoxelRenderer::VoxelData& VoxelRenderer::GetVoxelData(uint8_t voxelId) {
     return m_voxelRegistry[voxelId];
 }
 
-int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
+int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id, float u, float v)
 {
     vertices.push_back(x);
     vertices.push_back(y);
@@ -83,7 +83,10 @@ int VoxelRenderer::VoxelMesh::AddVertex(float x, float y, float z, uint8_t id)
     vertices.push_back(GetVoxelData(id).color.x);
     vertices.push_back(GetVoxelData(id).color.y);
     vertices.push_back(GetVoxelData(id).color.z);
-    return static_cast<int>((vertices.size() / 6) - 1);
+    vertices.push_back(u);
+    vertices.push_back(v);
+
+    return static_cast<int>((vertices.size() / 8) - 1);
 }
 
 void VoxelRenderer::VoxelMesh::AddIndex(int v0, int v1, int v2) {
@@ -201,14 +204,29 @@ VoxelRenderer::VoxelMesh VoxelRenderer::GenerateChunkMesh(Chunk chunk)
                         int* dv = new int[3] {0};
                         dv[v] = h;
 
-                        // Create a quad for this face. Colour, normal or textures are not stored in this block vertex format.
+                        const int tilesX = 64;
+                        const int tilesY = 64;
 
-                        int v0 = chunkMesh.AddVertex((float)(x[0]), (float)(x[1]), (float)(x[2]), voxelId);
-                        int v1 = chunkMesh.AddVertex((float)(x[0] + du[0]), (float)(x[1] + du[1]), (float)(x[2] + du[2]), voxelId);
-                        int v2 = chunkMesh.AddVertex((float)(x[0] + dv[0]), (float)(x[1] + dv[1]), (float)(x[2] + dv[2]), voxelId);
-                        int v3 = chunkMesh.AddVertex((float)(x[0] + du[0] + dv[0]), (float)(x[1] + du[1] + dv[1]), (float)(x[2] + du[2] + dv[2]), voxelId);
-                        chunkMesh.AddIndex(v0, v1, v2);
-                        chunkMesh.AddIndex(v1, v2, v3);
+                        int tileIndex = voxelId;
+                        int tileX = tileIndex % tilesX;
+                        int tileY = tileIndex / tilesX;
+
+                        float tileSizeX = 1.0f / tilesX;
+                        float tileSizeY = 1.0f / tilesY;
+
+                        float u0 = tileX * tileSizeX;
+                        float v0 = tileY * tileSizeY;
+                        float u1 = u0 + tileSizeX;
+                        float v1 = v0 + tileSizeY;
+
+                        // Create a quad for this face
+                        int idx0 = chunkMesh.AddVertex(x[0], x[1], x[2], voxelId, u0, v0);
+                        int idx1 = chunkMesh.AddVertex(x[0] + du[0], x[1] + du[1], x[2] + du[2], voxelId, u1, v0);
+                        int idx2 = chunkMesh.AddVertex(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2], voxelId, u0, v1);
+                        int idx3 = chunkMesh.AddVertex(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2], voxelId, u1, v1);
+
+                        chunkMesh.AddIndex(idx0, idx1, idx2);
+                        chunkMesh.AddIndex(idx1, idx2, idx3);
 
                         // Clear this part of the mask, so we don't add duplicate faces
                         for (l = 0; l < h; l++)
@@ -282,19 +300,19 @@ void VoxelRenderer::RenderMesh(const ChunkID& chunk_id)
 
     glBindVertexArray(VoxelRendererVAO);
 
-    // position attribute
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, CurrentMeshBufferInfo.VBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 
-    // color attribute
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CurrentMeshBufferInfo.EBO);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(CurrentMeshBufferInfo.idx_size * 3), GL_UNSIGNED_INT, 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CurrentMeshBufferInfo.EBO);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(CurrentMeshBufferInfo.idx_size), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
