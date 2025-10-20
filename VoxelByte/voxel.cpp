@@ -306,9 +306,9 @@ void VoxelRenderer::RenderAllMeshes()
     for (const auto& render_item : VoxelRendererBufferInfoMap)
     {
         m_voxel_shader->setFloat3(  "pos_offset",
-                                    render_item.second.chunk_origin.x,
-                                    render_item.second.chunk_origin.y,
-                                    render_item.second.chunk_origin.z);
+                                    static_cast<float>(render_item.second.chunk_origin.x),
+                                    static_cast<float>(render_item.second.chunk_origin.y),
+                                    static_cast<float>(render_item.second.chunk_origin.z));
 
         RenderMesh(render_item.first);
     }
@@ -327,7 +327,7 @@ Chunk::Chunk(ChunkID chunk_id, glm::ivec3 origin)
     m_origin = origin;
 
     m_voxelArray.resize(Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE);
-    VB::inst().GetLogger()->Print("Chunk obj with id: " + std::to_string(chunk_id) + " constructed");
+    VB::inst().GetLogger()->Print("Chunk obj with ID: " + std::to_string(chunk_id) + " constructed");
 }
 
 glm::ivec3 Chunk::getOrigin()
